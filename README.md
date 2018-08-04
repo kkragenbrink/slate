@@ -1,5 +1,5 @@
 [![Go report](http://goreportcard.com/badge/kkragenbrink/slate)](http://goreportcard.com/report/kkragenbrink/slate) 
-[![Build Status](https://travis-ci.com/kkragenbrink/slate.svg?branch=master)](https://travis-ci.org/kkragenbrink/slate)
+[![Build Status](https://travis-ci.com/kkragenbrink/slate.svg?branch=master)](https://travis-ci.com/kkragenbrink/slate)
 
 # Slate
 A [Discord Bot](http://www.discordapp.com/) written in Golang for managing Roleplaying Characters and Campaigns.
