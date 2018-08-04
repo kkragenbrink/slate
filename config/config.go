@@ -18,34 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package bot
+package config
 
 import (
-	"github.com/kkragenbrink/slate/config"
-	"github.com/stretchr/testify/assert"
-	"testing"
+	"os"
+
+	"github.com/pkg/errors"
 )
 
-// TestNew tests the New() function without any arguments.  This should return a
-// valid Bot{} struct and no errors.
-func TestNew(t *testing.T) {
-	cfg := new(config.Config)
-	cfg.DiscordToken = "test-token"
+// ErrNoDiscordToken is thrown when the environment variable isn't set
+var ErrNoDiscordToken = errors.New("$DISCORD_TOKEN is required")
 
-	_, err := New(cfg, MockDiscordFactory)
-	assert.Nil(t, err)
+// Config holds configuration information which is necessary to run slate.
+// This information is passed in at runtime via environment variables.
+type Config struct {
+	DiscordToken string
 }
 
-// TestStop tests the Stop() function.
-func TestStop(t *testing.T) {
-	b := new(Bot)
+// New returns a new configuration object, and initializes th at object from
+// environment variables.
+func New() (*Config, error) {
+	cfg := new(Config)
 
-	md := new(MockDiscordSession)
-	md.On("Close").Return(nil)
-	b.session = md
+	// Initialize the Discord Token
+	dt, err := initDiscordToken()
+	if err != nil {
+		return nil, err
+	}
+	cfg.DiscordToken = dt
 
-	err := b.Stop()
-	assert.Nil(t, err)
+	return cfg, nil
+}
 
-	md.AssertExpectations(t)
+func initDiscordToken() (string, error) {
+	token := os.Getenv("DISCORD_TOKEN")
+	if token == "" {
+		return "", ErrNoDiscordToken
+	}
+	return token, nil
 }

@@ -22,30 +22,26 @@ package bot
 
 import (
 	"github.com/kkragenbrink/slate/config"
-	"github.com/stretchr/testify/assert"
-	"testing"
+	"github.com/stretchr/testify/mock"
 )
 
-// TestNew tests the New() function without any arguments.  This should return a
-// valid Bot{} struct and no errors.
-func TestNew(t *testing.T) {
-	cfg := new(config.Config)
-	cfg.DiscordToken = "test-token"
-
-	_, err := New(cfg, MockDiscordFactory)
-	assert.Nil(t, err)
+// MockDiscordSession mocks a discord session object
+type MockDiscordSession struct {
+	mock.Mock
 }
 
-// TestStop tests the Stop() function.
-func TestStop(t *testing.T) {
-	b := new(Bot)
+// Open is a stub
+func (*MockDiscordSession) Open() error {
+	return nil
+}
 
-	md := new(MockDiscordSession)
-	md.On("Close").Return(nil)
-	b.session = md
+// Close is a stub
+func (m *MockDiscordSession) Close() error {
+	m.Called()
+	return nil
+}
 
-	err := b.Stop()
-	assert.Nil(t, err)
-
-	md.AssertExpectations(t)
+// MockDiscordFactory is a DiscordFactory mock function for the MockDiscordSession
+func MockDiscordFactory(cfg *config.Config) (DiscordSession, error) {
+	return new(MockDiscordSession), nil
 }

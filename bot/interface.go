@@ -20,32 +20,17 @@
 
 package bot
 
-import (
-	"github.com/kkragenbrink/slate/config"
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
+import "github.com/kkragenbrink/slate/config"
 
-// TestNew tests the New() function without any arguments.  This should return a
-// valid Bot{} struct and no errors.
-func TestNew(t *testing.T) {
-	cfg := new(config.Config)
-	cfg.DiscordToken = "test-token"
+// DiscordFactory describes a factory function used to create a discord session.
+// 		cfg: The slate configuration object.
+type DiscordFactory func(cfg *config.Config) (DiscordSession, error)
 
-	_, err := New(cfg, MockDiscordFactory)
-	assert.Nil(t, err)
-}
+// DiscordSession describes the functions required to work with discord
+type DiscordSession interface {
+	// Open establishes the websocket connection to Discord.
+	Open() error
 
-// TestStop tests the Stop() function.
-func TestStop(t *testing.T) {
-	b := new(Bot)
-
-	md := new(MockDiscordSession)
-	md.On("Close").Return(nil)
-	b.session = md
-
-	err := b.Stop()
-	assert.Nil(t, err)
-
-	md.AssertExpectations(t)
+	// Close closes the websocket connection to Discord.
+	Close() error
 }

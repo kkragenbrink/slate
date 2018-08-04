@@ -22,16 +22,24 @@ package main
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/bot"
+	"github.com/kkragenbrink/slate/config"
 )
 
 func main() {
-	fmt.Println("Hello, Slate!")
+	// Setting up configuration profile
+	cfg, err := config.New()
 
 	// Create a discord bot
-	b, err := bot.New()
+	b, err := bot.New(cfg, discordGoFactory)
 	if err != nil {
 		fmt.Printf("could not connect to discord: %+v", err)
 	}
 	defer b.Stop()
+}
+
+func discordGoFactory(cfg *config.Config) (bot.DiscordSession, error) {
+	connstr := fmt.Sprintf("Bot %s", cfg.DiscordToken)
+	return discordgo.New(connstr)
 }

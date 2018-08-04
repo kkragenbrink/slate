@@ -18,34 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package bot
+package config
 
 import (
-	"github.com/kkragenbrink/slate/config"
-	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
-// TestNew tests the New() function without any arguments.  This should return a
-// valid Bot{} struct and no errors.
+// TestNew tests the New() function with all environment variables already set.
+// This should return a valid Config{} struct and no errors.
 func TestNew(t *testing.T) {
-	cfg := new(config.Config)
-	cfg.DiscordToken = "test-token"
+	// setup
+	dt := os.Getenv("DISCORD_TOKEN")
+	expectedDiscordToken := "test"
+	os.Setenv("DISCORD_TOKEN", expectedDiscordToken)
 
-	_, err := New(cfg, MockDiscordFactory)
-	assert.Nil(t, err)
+	// run tests
+	cfg, err := New()
+	if err != nil {
+		t.Errorf("New() returned error: %+v", err)
+	}
+	if cfg.DiscordToken != expectedDiscordToken {
+		t.Errorf("New() did not correctly retrieve the correct environment variable")
+	}
+
+	// tear down
+	os.Setenv("DISCORD_TOKEN", dt)
 }
 
-// TestStop tests the Stop() function.
-func TestStop(t *testing.T) {
-	b := new(Bot)
-
-	md := new(MockDiscordSession)
-	md.On("Close").Return(nil)
-	b.session = md
-
-	err := b.Stop()
-	assert.Nil(t, err)
-
-	md.AssertExpectations(t)
+// TestNoDiscordToken tests initDiscordToken without the environment variable.
+func TestNoDiscordToken(t *testing.T) {
+	dt, err := initDiscordToken()
+	if dt != "" {
+		t.Error("initDiscordToken(), dt is set, should be nil")
+	}
+	if err == nil {
+		t.Error("initDiscordToken(), err is nil, should be noDiscordToken error")
+	}
 }

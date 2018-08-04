@@ -20,23 +20,46 @@
 
 package bot
 
+import (
+	"github.com/kkragenbrink/slate/config"
+)
+
 // Bot contains the connection information and commands used to communicate with
 // Discord.
 type Bot struct {
+	session DiscordSession
 }
 
 // Stop cleanly closes the connection to Discord
 func (b *Bot) Stop() error {
-	// todo: implement
+	err := b.session.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // New returns a new instance of a Bot and establishes the connection to
 // discord.
-func New() (*Bot, error) {
-	b := &Bot{}
+func New(cfg *config.Config, factory DiscordFactory) (*Bot, error) {
+	b := new(Bot)
 
-	// todo: connect to discord.
+	if cfg.DiscordToken == "" {
+		return nil, config.ErrNoDiscordToken
+	}
+
+	// create a connection to discord
+	s, err := factory(cfg)
+	if err != nil {
+		return nil, err
+	}
+	b.session = s
+
+	// open the websocket
+	err = s.Open()
+	if err != nil {
+		return nil, err
+	}
 
 	return b, nil
 }
