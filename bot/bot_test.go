@@ -32,7 +32,8 @@ func TestNew(t *testing.T) {
 	cfg := new(config.Config)
 	cfg.DiscordToken = "test-token"
 
-	_, err := New(cfg, MockDiscordFactory)
+	discord, _ := MockDiscordFactory(cfg)
+	_, err := New(cfg, discord)
 	assert.Nil(t, err)
 }
 
