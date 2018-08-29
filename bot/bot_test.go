@@ -21,6 +21,7 @@
 package bot
 
 import (
+	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -32,9 +33,14 @@ func TestNew(t *testing.T) {
 	cfg := new(config.Config)
 	cfg.DiscordToken = "test-token"
 
-	discord, _ := MockDiscordFactory(cfg)
-	_, err := New(cfg, discord)
+	md := new(MockDiscordSession)
+	md.On("Open").Return(nil)
+	md.On("AddHandler").Return(nil)
+
+	_, err := New(cfg, md)
 	assert.Nil(t, err)
+
+	md.AssertExpectations(t)
 }
 
 // TestStop tests the Stop() function.
@@ -49,4 +55,56 @@ func TestStop(t *testing.T) {
 	assert.Nil(t, err)
 
 	md.AssertExpectations(t)
+}
+
+// TestHandleMessageCreate tests the ability to handle an incoming message
+func TestHandleMessageCreate(t *testing.T) {
+	b := new(Bot)
+
+	cfg := new(config.Config)
+	cfg.CommandPrefix = "$test"
+	b.config = cfg
+
+	md := new(MockDiscordSession)
+	md.On("ChannelMessageSend").Return(nil)
+	b.session = md
+
+	mc := new(MockCommand)
+	b.AddCommand(mc)
+
+	msg := &discordgo.Message{
+		ChannelID: "test",
+		Content:   "$test test",
+	}
+	msgc := &discordgo.MessageCreate{Message: msg}
+
+	b.handleMessageCreate(md, msgc)
+
+	md.AssertExpectations(t)
+	mc.AssertExpectations(t)
+}
+
+func Test_Commands(t *testing.T) {
+	b := new(Bot)
+
+	cfg := new(config.Config)
+	cfg.CommandPrefix = "$test"
+	b.config = cfg
+
+	md := new(MockDiscordSession)
+	b.session = md
+
+	mc := new(MockCommand)
+	mc.On("Execute").Return(nil)
+
+	b.AddCommand(mc)
+	msg := &discordgo.Message{
+		ChannelID: "test",
+		Content:   "$test mock",
+	}
+	msgc := &discordgo.MessageCreate{Message: msg}
+
+	b.handleMessageCreate(md, msgc)
+	md.AssertExpectations(t)
+	mc.AssertExpectations(t)
 }
