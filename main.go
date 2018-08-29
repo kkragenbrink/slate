@@ -26,6 +26,8 @@ import (
 	"github.com/kkragenbrink/slate/config"
 	"github.com/kkragenbrink/slate/discord"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -42,8 +44,19 @@ func main() {
 	// Create a discord bot
 	b, err := bot.New(cfg, session)
 	if err != nil {
-		fmt.Printf("could not connect to discord: %+v", err)
+		fmt.Printf("could not authenticate with discord: %+v", err)
 		os.Exit(1)
 	}
 	defer b.Stop()
+
+	// wait for a shutdown signal
+	waitForSignals()
+}
+
+func waitForSignals() {
+	// Wait here until CTRL-C or other term signal is received.
+	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
 }

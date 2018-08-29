@@ -20,7 +20,26 @@
 
 package bot
 
-import "github.com/kkragenbrink/slate/config"
+import (
+	"context"
+	"github.com/bwmarrin/discordgo"
+	"github.com/kkragenbrink/slate/config"
+)
+
+// SlateCommand describes a command to be registered with slate.
+type SlateCommand interface {
+	// Name describes the string used to route input to this command
+	Name() string
+
+	// Synopsis describes what the command will do
+	Synopsis() string
+
+	// Usage describes the helpfile and usage for this command
+	Usage() string
+
+	// Execute is the handler which will be run when this command is called
+	Execute(context.Context, []string, DiscordSession, *discordgo.MessageCreate)
+}
 
 // DiscordFactory describes a factory function used to create a discord session.
 // 		cfg: The slate configuration object.
@@ -28,6 +47,13 @@ type DiscordFactory func(cfg *config.Config) (DiscordSession, error)
 
 // DiscordSession describes the functions required to work with discord
 type DiscordSession interface {
+	// AddHandler adds a function handler to Discord.
+	AddHandler(interface{}) func()
+
+	// ChannelMessageSend allows a message to be sent to a channel on Discord
+	// todo: Remove the hard reference to discordgo
+	ChannelMessageSend(string, string) (*discordgo.Message, error)
+
 	// Open establishes the websocket connection to Discord.
 	Open() error
 

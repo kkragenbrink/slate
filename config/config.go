@@ -32,7 +32,8 @@ var ErrNoDiscordToken = errors.New("$DISCORD_TOKEN is required")
 // Config holds configuration information which is necessary to run slate.
 // This information is passed in at runtime via environment variables.
 type Config struct {
-	DiscordToken string
+	CommandPrefix string
+	DiscordToken  string
 }
 
 // New returns a new configuration object, and initializes th at object from
@@ -47,7 +48,20 @@ func New() (*Config, error) {
 	}
 	cfg.DiscordToken = dt
 
+	// Initialize the Command Prefix
+	cp := initCommandPrefix()
+	cfg.CommandPrefix = cp
+
 	return cfg, nil
+}
+
+func initCommandPrefix() string {
+	prefix := os.Getenv("COMMAND_PREFIX")
+	if prefix == "" {
+		return "$late "
+	}
+
+	return prefix
 }
 
 func initDiscordToken() (string, error) {

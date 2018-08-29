@@ -21,6 +21,8 @@
 package bot
 
 import (
+	"context"
+	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
 	"github.com/stretchr/testify/mock"
 )
@@ -30,8 +32,21 @@ type MockDiscordSession struct {
 	mock.Mock
 }
 
+// AddHandler is a stub
+func (m *MockDiscordSession) AddHandler(h interface{}) func() {
+	m.Called()
+	return func() {}
+}
+
+// ChannelMessageSend is a stub
+func (m *MockDiscordSession) ChannelMessageSend(ch string, message string) (*discordgo.Message, error) {
+	m.Called()
+	return nil, nil
+}
+
 // Open is a stub
-func (*MockDiscordSession) Open() error {
+func (m *MockDiscordSession) Open() error {
+	m.Called()
 	return nil
 }
 
@@ -44,4 +59,23 @@ func (m *MockDiscordSession) Close() error {
 // MockDiscordFactory is a DiscordFactory mock function for the MockDiscordSession
 func MockDiscordFactory(cfg *config.Config) (DiscordSession, error) {
 	return new(MockDiscordSession), nil
+}
+
+// MockCommand is a mock command handler
+type MockCommand struct {
+	mock.Mock
+}
+
+// Name returns the name of the command
+func (*MockCommand) Name() string { return "mock" }
+
+// Synopsis returns the synospis of the command
+func (*MockCommand) Synopsis() string { return "used for test mocks" }
+
+// Usage returns the usage of the command
+func (*MockCommand) Usage() string { return "mock usage" }
+
+// Execute runs the command
+func (mc *MockCommand) Execute(ctx context.Context, fields []string, session DiscordSession, message *discordgo.MessageCreate) {
+	mc.Called()
 }
