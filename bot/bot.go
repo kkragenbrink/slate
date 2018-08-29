@@ -27,6 +27,7 @@ import (
 // Bot contains the connection information and commands used to communicate with
 // Discord.
 type Bot struct {
+	config  *config.Config
 	session DiscordSession
 }
 
@@ -41,22 +42,13 @@ func (b *Bot) Stop() error {
 
 // New returns a new instance of a Bot and establishes the connection to
 // discord.
-func New(cfg *config.Config, factory DiscordFactory) (*Bot, error) {
+func New(cfg *config.Config, s DiscordSession) (*Bot, error) {
 	b := new(Bot)
-
-	if cfg.DiscordToken == "" {
-		return nil, config.ErrNoDiscordToken
-	}
-
-	// create a connection to discord
-	s, err := factory(cfg)
-	if err != nil {
-		return nil, err
-	}
+	b.config = cfg
 	b.session = s
 
 	// open the websocket
-	err = s.Open()
+	err := b.session.Open()
 	if err != nil {
 		return nil, err
 	}

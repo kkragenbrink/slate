@@ -19,6 +19,7 @@ coverage=$(go tool cover -func profile.cov | tail -n 1 | awk '{print $3}' | sed 
 
 rm profile.cov
 
+echo "coverage: $coverage%"
 if (( $(echo "$coverage < 80" | bc -l) )); then
     exit 1
 fi
