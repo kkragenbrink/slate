@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"strings"
 )
 
 // FormatCofDResults
@@ -209,4 +210,13 @@ func TestCofDRollChance(t *testing.T) {
 	assert.Equal(t, []int{10}, r)
 	assert.Equal(t, []int(nil), rr)
 	assert.Equal(t, 1, s)
+}
+
+func TestProcessCofDArgs(t *testing.T) {
+	argstr := "1 + 2 + 3 + 4 - 10"
+	args := strings.Split(argstr, " ")
+	expected := 0
+	o, e := processCofDArgs(args)
+	assert.Nil(t, e)
+	assert.Equal(t, expected, o)
 }
