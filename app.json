@@ -1,0 +1,13 @@
+{
+    "name": "Slate",
+    "description": "A Discord bot for RPG character sheets",
+    "keywords": [
+        "discord",
+        "bot",
+        "rpg",
+        "character",
+        "sheet"
+    ],
+    "website": "http://github.com/kkragenbrink/slate",
+    "repository": "http://github.com/kkragenbrink/slate"
+}
