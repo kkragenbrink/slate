@@ -22,7 +22,10 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestNew tests the New() function with all environment variables already set.
@@ -33,26 +36,31 @@ func TestNew(t *testing.T) {
 	expectedDiscordToken := "test"
 	os.Setenv("DISCORD_TOKEN", expectedDiscordToken)
 
+	port := os.Getenv("PORT")
+	expectedPort := 1234
+	os.Setenv("PORT", strconv.Itoa(expectedPort))
+
 	// run tests
 	cfg, err := New()
-	if err != nil {
-		t.Errorf("New() returned error: %+v", err)
-	}
-	if cfg.DiscordToken != expectedDiscordToken {
-		t.Errorf("New() did not correctly retrieve the correct environment variable")
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, expectedDiscordToken, cfg.DiscordToken)
+	assert.Equal(t, expectedPort, cfg.Port)
 
 	// tear down
 	os.Setenv("DISCORD_TOKEN", dt)
+	os.Setenv("PORT", port)
 }
 
 // TestNoDiscordToken tests initDiscordToken without the environment variable.
 func TestNoDiscordToken(t *testing.T) {
 	dt, err := initDiscordToken()
-	if dt != "" {
-		t.Error("initDiscordToken(), dt is set, should be nil")
-	}
-	if err == nil {
-		t.Error("initDiscordToken(), err is nil, should be noDiscordToken error")
-	}
+	assert.Equal(t, "", dt)
+	assert.Error(t, err)
+}
+
+// TestNoDiscordToken tests initDiscordToken without the environment variable.
+func TestNoPort(t *testing.T) {
+	port, err := initPort()
+	assert.Equal(t, 0, port)
+	assert.Error(t, err)
 }
