@@ -60,6 +60,18 @@
 			"revisionTime": "2018-03-14T08:05:35Z"
 		},
 		{
+			"checksumSHA1": "wnEANt4k5X/KGwoFyfSSnpxULm4=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
+			"checksumSHA1": "uefllr2OtKBGo/kQSAPbW3w6p0A=",
+			"path": "github.com/stretchr/testify/suite",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
 			"checksumSHA1": "TwxAhBcGuCzWA6H3FvJE1XVZsxo=",
 			"path": "golang.org/x/crypto/nacl/secretbox",
 			"revision": "8b1d31080a7692e075c4681cb2458454a1fe0706",
