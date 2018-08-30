@@ -1,2 +1,3 @@
 # IDE specific files
-.idea
+/.idea
+/launch.json
