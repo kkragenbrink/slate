@@ -22,6 +22,8 @@ package bot
 
 import (
 	"context"
+	"flag"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
 	"github.com/stretchr/testify/mock"
@@ -75,7 +77,11 @@ func (*MockCommand) Synopsis() string { return "used for test mocks" }
 // Usage returns the usage of the command
 func (*MockCommand) Usage() string { return "mock usage" }
 
+// SetFlags sets the flags for the commands
+func (c *MockCommand) SetFlags(f *flag.FlagSet) {}
+
 // Execute runs the command
-func (mc *MockCommand) Execute(ctx context.Context, fields []string, session DiscordSession, message *discordgo.MessageCreate) {
-	mc.Called()
+func (c *MockCommand) Execute(ctx context.Context, f *flag.FlagSet) string {
+	c.Called()
+	return ""
 }
