@@ -29,10 +29,48 @@ import (
 	"strings"
 )
 
+func reverseSlice(input []string) []string {
+	if len(input) == 0 {
+		return input
+	}
+	return append(reverseSlice(input[1:]), input[0])
+}
+
+func processCofDArgs(args []string) (int, error) {
+	r := []int{0}
+
+	for _, arg := range reverseSlice(args) {
+		num, err := strconv.Atoi(arg)
+
+		if err != nil {
+			if arg == "+" {
+				continue
+			}
+
+			if arg == "-" {
+				x, r := r[len(r)-1], r[:len(r)-1]
+				x = x * -1
+				r = append(r, x)
+				continue
+			}
+
+			return 0, err
+		}
+
+		r = append(r, num)
+	}
+
+	results := 0
+	for _, num := range r {
+		results += num
+	}
+	return max(results, 0), nil
+}
+
 func (c *Command) cofd(ctx context.Context, args []string) string {
-	dice, err := strconv.Atoi(args[0])
+	dice, err := processCofDArgs(args)
 	if err != nil {
-		return fmt.Sprintf("%s is not a valid number of dice.", args[0])
+		return fmt.Sprintf("%s is not a valid dice algorithm", args)
 	}
 
 	rolls, rerolls, successes := cofdroll(dice, c.flags.cofd.again, c.flags.cofd.rote, c.flags.cofd.weakness, rand.Intn)
