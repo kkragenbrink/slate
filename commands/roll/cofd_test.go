@@ -103,6 +103,24 @@ func (s *FormatCofDResultsSuite) TestWeak() {
 	assert.Equal(s.T(), "rolled 2 CofD dice (with weakness) for 2 successes.", s.cmd.formatCofDResults(dice, rolls, rerolls, successes))
 }
 
+func (s *FormatCofDResultsSuite) TestChance() {
+	dice := 0
+	rolls := []int{5}
+	rerolls := []int(nil)
+	successes := 0
+
+	assert.Equal(s.T(), "rolled 0 CofD dice (Chance Die) for 0 successes.", s.cmd.formatCofDResults(dice, rolls, rerolls, successes))
+}
+
+func (s *FormatCofDResultsSuite) TestCriticalFailure() {
+	dice := 0
+	rolls := []int{1}
+	rerolls := []int(nil)
+	successes := 0
+
+	assert.Equal(s.T(), "rolled 0 CofD dice (Chance Die) for 0 successes. Critical failure!", s.cmd.formatCofDResults(dice, rolls, rerolls, successes))
+}
+
 func TestFormatCofDResult(t *testing.T) {
 	suite.Run(t, new(FormatCofDResultsSuite))
 }
@@ -173,4 +191,22 @@ func TestCofDRollWeak(t *testing.T) {
 	assert.Equal(t, []int{9, 9, 9, 9, 1}, r)
 	assert.Equal(t, []int(nil), rr)
 	assert.Equal(t, 3, s)
+}
+
+func TestCofDRollChance(t *testing.T) {
+	roll := func(n int) int {
+		return 8
+	}
+	r, rr, s := cofdroll(0, 10, false, false, roll)
+	assert.Equal(t, []int{9}, r)
+	assert.Equal(t, []int(nil), rr)
+	assert.Equal(t, 0, s)
+
+	roll = func(n int) int {
+		return 9
+	}
+	r, rr, s = cofdroll(0, 10, false, false, roll)
+	assert.Equal(t, []int{10}, r)
+	assert.Equal(t, []int(nil), rr)
+	assert.Equal(t, 1, s)
 }
