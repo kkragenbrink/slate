@@ -22,6 +22,7 @@ package bot
 
 import (
 	"context"
+	"flag"
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
 )
@@ -37,8 +38,11 @@ type SlateCommand interface {
 	// Usage describes the helpfile and usage for this command
 	Usage() string
 
+	// SetFlags sets up any flags the command requires
+	SetFlags(set *flag.FlagSet)
+
 	// Execute is the handler which will be run when this command is called
-	Execute(context.Context, []string, DiscordSession, *discordgo.MessageCreate)
+	Execute(context.Context, *flag.FlagSet) string
 }
 
 // DiscordFactory describes a factory function used to create a discord session.

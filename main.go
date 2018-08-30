@@ -23,6 +23,7 @@ package main
 import (
 	"fmt"
 	"github.com/kkragenbrink/slate/bot"
+	"github.com/kkragenbrink/slate/commands"
 	"github.com/kkragenbrink/slate/config"
 	"github.com/kkragenbrink/slate/discord"
 	"os"
@@ -48,6 +49,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer b.Stop()
+
+	// Set up the bot commands
+	commands.Setup(b)
 
 	// wait for a shutdown signal
 	waitForSignals()

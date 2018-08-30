@@ -22,6 +22,7 @@ package bot
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
@@ -56,7 +57,7 @@ func (b *Bot) Stop() error {
 	return nil
 }
 
-func (b *Bot) handleMessageCreate(s DiscordSession, msg *discordgo.MessageCreate) {
+func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 	if !strings.HasPrefix(msg.Content, b.config.CommandPrefix) {
 		return // this is not our command to handle
 	}
@@ -78,7 +79,13 @@ func (b *Bot) handleMessageCreate(s DiscordSession, msg *discordgo.MessageCreate
 
 	for _, command := range b.commands {
 		if name == command.Name() {
-			command.Execute(ctx, fields, b.session, msg)
+			fs := new(flag.FlagSet)
+			command.SetFlags(fs)
+			fs.Parse(fields)
+
+			output := command.Execute(ctx, fs)
+			response := fmt.Sprintf("%s %s", msg.Author.Mention(), output)
+			b.session.ChannelMessageSend(msg.ChannelID, response)
 			return
 		}
 
@@ -114,7 +121,9 @@ func New(cfg *config.Config, s DiscordSession) (*Bot, error) {
 	}
 
 	// establish the command handler
-	s.AddHandler(b.handleMessageCreate)
+	s.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+		b.handleMessageCreate(m)
+	})
 
 	return b, nil
 }

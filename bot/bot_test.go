@@ -78,7 +78,7 @@ func TestHandleMessageCreate(t *testing.T) {
 	}
 	msgc := &discordgo.MessageCreate{Message: msg}
 
-	b.handleMessageCreate(md, msgc)
+	b.handleMessageCreate(msgc)
 
 	md.AssertExpectations(t)
 	mc.AssertExpectations(t)
@@ -92,6 +92,7 @@ func Test_Commands(t *testing.T) {
 	b.config = cfg
 
 	md := new(MockDiscordSession)
+	md.On("ChannelMessageSend").Return(nil)
 	b.session = md
 
 	mc := new(MockCommand)
@@ -101,10 +102,11 @@ func Test_Commands(t *testing.T) {
 	msg := &discordgo.Message{
 		ChannelID: "test",
 		Content:   "$test mock",
+		Author:    &discordgo.User{ID: "test"},
 	}
 	msgc := &discordgo.MessageCreate{Message: msg}
 
-	b.handleMessageCreate(md, msgc)
+	b.handleMessageCreate(msgc)
 	md.AssertExpectations(t)
 	mc.AssertExpectations(t)
 }
