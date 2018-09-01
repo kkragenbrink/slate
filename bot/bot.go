@@ -85,6 +85,7 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 	var longest int
 
 	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	for _, command := range b.commands {
 		if name == command.Name() {
 			fmt.Printf("user: %s#%s, command: %s\n", msg.Author.Username, msg.Author.Discriminator, command.Name())
@@ -105,7 +106,6 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 		usage := []string{command.Name(), command.Synopsis()}
 		commandList = append(commandList, usage)
 	}
-	b.mutex.Unlock()
 
 	// command not found
 	lines := []string{fmt.Sprintf("\n```Usage: %s<command> <args>\n\nCommands:", b.config.CommandPrefix)}
