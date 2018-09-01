@@ -30,7 +30,6 @@ import (
 	"github.com/kkragenbrink/slate/commands"
 	"github.com/kkragenbrink/slate/config"
 	"github.com/kkragenbrink/slate/discord"
-	"github.com/kkragenbrink/slate/router"
 )
 
 func main() {
@@ -54,9 +53,6 @@ func main() {
 
 	// Set up the bot commands
 	commands.Setup(b)
-
-	// Set up the HTTP server
-	router.New(cfg)
 
 	// wait for a shutdown signal
 	waitForSignals()
