@@ -22,7 +22,6 @@ package config
 
 import (
 	"os"
-	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -30,39 +29,29 @@ import (
 // ErrNoDiscordToken is thrown when the environment variable isn't set
 var ErrNoDiscordToken = errors.New("$DISCORD_TOKEN is required")
 
-// ErrNoPort is thrown when the environment variable isn't set
-var ErrNoPort = errors.New("$PORT is required")
-
 // Config holds configuration information which is necessary to run slate.
 // This information is passed in at runtime via environment variables.
 type Config struct {
 	CommandPrefix string
 	DiscordToken  string
-	Port          int
 }
 
 // New returns a new configuration object, and initializes th at object from
 // environment variables.
 func New() (*Config, error) {
-	cfg := new(Config)
-
 	// Initialize the Discord Token
-	dt, err := initDiscordToken()
+	discordToken, err := initDiscordToken()
 	if err != nil {
 		return nil, err
 	}
-	cfg.DiscordToken = dt
 
 	// Initialize the Command Prefix
-	cp := initCommandPrefix()
-	cfg.CommandPrefix = cp
+	commandPrefix := initCommandPrefix()
 
-	// Initialize the Port
-	port, err := initPort()
-	if err != nil {
-		return nil, err
+	cfg := &Config{
+		DiscordToken:  discordToken,
+		CommandPrefix: commandPrefix,
 	}
-	cfg.Port = port
 
 	return cfg, nil
 }
@@ -82,12 +71,4 @@ func initDiscordToken() (string, error) {
 		return "", ErrNoDiscordToken
 	}
 	return token, nil
-}
-
-func initPort() (int, error) {
-	port := os.Getenv("PORT")
-	if port == "" {
-		return 0, ErrNoPort
-	}
-	return strconv.Atoi(port)
 }

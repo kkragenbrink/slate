@@ -1,5 +1,6 @@
 # IDE specific files
 /.idea
+/.vscode
 /launch.json
 
 # Build files

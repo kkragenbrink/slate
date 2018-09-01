@@ -24,10 +24,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
-	"strings"
-	"time"
 )
 
 // Bot contains the connection information and commands used to communicate with
@@ -36,15 +38,20 @@ type Bot struct {
 	config   *config.Config
 	session  DiscordSession
 	commands []SlateCommand
+	mutex    *sync.Mutex
 }
 
 // AddCommand allows a new command to be registered with the bot
 func (b *Bot) AddCommand(command SlateCommand) {
+	b.mutex.Lock()
 	b.commands = append(b.commands, command)
+	b.mutex.Unlock()
 }
 
 // Commands returns the list of commands
 func (b *Bot) Commands() []SlateCommand {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	return b.commands
 }
 
@@ -77,9 +84,11 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 	var commandList [][]string
 	var longest int
 
+	b.mutex.Lock()
 	for _, command := range b.commands {
 		if name == command.Name() {
-			fs := new(flag.FlagSet)
+			fmt.Printf("user: %s#%s, command: %s\n", msg.Author.Username, msg.Author.Discriminator, command.Name())
+			fs := &flag.FlagSet{}
 			command.SetFlags(fs)
 			fs.Parse(fields)
 
@@ -96,6 +105,7 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 		usage := []string{command.Name(), command.Synopsis()}
 		commandList = append(commandList, usage)
 	}
+	b.mutex.Unlock()
 
 	// command not found
 	lines := []string{fmt.Sprintf("\n```Usage: %s<command> <args>\n\nCommands:", b.config.CommandPrefix)}
@@ -110,9 +120,11 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 // New returns a new instance of a Bot and establishes the connection to
 // discord.
 func New(cfg *config.Config, s DiscordSession) (*Bot, error) {
-	b := new(Bot)
-	b.config = cfg
-	b.session = s
+	b := &Bot{
+		config:  cfg,
+		session: s,
+		mutex:   &sync.Mutex{},
+	}
 
 	// open the websocket
 	err := s.Open()

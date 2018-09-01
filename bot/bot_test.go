@@ -21,10 +21,12 @@
 package bot
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/config"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 // TestNew tests the New() function without any arguments.  This should return a
@@ -45,7 +47,7 @@ func TestNew(t *testing.T) {
 
 // TestStop tests the Stop() function.
 func TestStop(t *testing.T) {
-	b := new(Bot)
+	b := &Bot{}
 
 	md := new(MockDiscordSession)
 	md.On("Close").Return(nil)
@@ -59,7 +61,8 @@ func TestStop(t *testing.T) {
 
 // TestHandleMessageCreate tests the ability to handle an incoming message
 func TestHandleMessageCreate(t *testing.T) {
-	b := new(Bot)
+	b := &Bot{}
+	b.mutex = &sync.Mutex{}
 
 	cfg := new(config.Config)
 	cfg.CommandPrefix = "$test"
@@ -85,7 +88,8 @@ func TestHandleMessageCreate(t *testing.T) {
 }
 
 func Test_Commands(t *testing.T) {
-	b := new(Bot)
+	b := &Bot{}
+	b.mutex = &sync.Mutex{}
 
 	cfg := new(config.Config)
 	cfg.CommandPrefix = "$test"
