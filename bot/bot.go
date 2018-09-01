@@ -24,10 +24,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/kkragenbrink/slate/config"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/kkragenbrink/slate/config"
 )
 
 // Bot contains the connection information and commands used to communicate with
@@ -79,7 +80,7 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 
 	for _, command := range b.commands {
 		if name == command.Name() {
-			fs := new(flag.FlagSet)
+			fs := &flag.FlagSet{}
 			command.SetFlags(fs)
 			fs.Parse(fields)
 
@@ -110,9 +111,10 @@ func (b *Bot) handleMessageCreate(msg *discordgo.MessageCreate) {
 // New returns a new instance of a Bot and establishes the connection to
 // discord.
 func New(cfg *config.Config, s DiscordSession) (*Bot, error) {
-	b := new(Bot)
-	b.config = cfg
-	b.session = s
+	b := &Bot{
+		config:  cfg,
+		session: s,
+	}
 
 	// open the websocket
 	err := s.Open()

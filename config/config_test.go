@@ -22,7 +22,6 @@ package config
 
 import (
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,31 +35,18 @@ func TestNew(t *testing.T) {
 	expectedDiscordToken := "test"
 	os.Setenv("DISCORD_TOKEN", expectedDiscordToken)
 
-	port := os.Getenv("PORT")
-	expectedPort := 1234
-	os.Setenv("PORT", strconv.Itoa(expectedPort))
-
 	// run tests
 	cfg, err := New()
 	assert.Nil(t, err)
 	assert.Equal(t, expectedDiscordToken, cfg.DiscordToken)
-	assert.Equal(t, expectedPort, cfg.Port)
 
 	// tear down
 	os.Setenv("DISCORD_TOKEN", dt)
-	os.Setenv("PORT", port)
 }
 
 // TestNoDiscordToken tests initDiscordToken without the environment variable.
 func TestNoDiscordToken(t *testing.T) {
 	dt, err := initDiscordToken()
 	assert.Equal(t, "", dt)
-	assert.Error(t, err)
-}
-
-// TestNoDiscordToken tests initDiscordToken without the environment variable.
-func TestNoPort(t *testing.T) {
-	port, err := initPort()
-	assert.Equal(t, 0, port)
 	assert.Error(t, err)
 }
