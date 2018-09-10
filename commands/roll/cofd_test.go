@@ -25,7 +25,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"strings"
 )
 
 // FormatCofDResults
@@ -124,99 +123,4 @@ func (s *FormatCofDResultsSuite) TestCriticalFailure() {
 
 func TestFormatCofDResult(t *testing.T) {
 	suite.Run(t, new(FormatCofDResultsSuite))
-}
-
-// CofDRuoll
-func TestCofDRoll(t *testing.T) {
-	rolls := 0
-	roll := func(n int) int {
-		rolls++
-		if rolls < 5 {
-			return 5
-		}
-		return 7
-	}
-
-	r, rr, s := cofdroll(5, 10, false, false, roll)
-	assert.Equal(t, []int{6, 6, 6, 6, 8}, r)
-	assert.Equal(t, []int(nil), rr)
-	assert.Equal(t, 1, s)
-}
-
-func TestCofDRollAgain(t *testing.T) {
-	rolls := 0
-	roll := func(n int) int {
-		rolls++
-		if rolls < 5 {
-			return 5
-		}
-		if rolls < 6 {
-			return 9
-		}
-		return 8
-	}
-
-	r, rr, s := cofdroll(5, 10, false, false, roll)
-	assert.Equal(t, []int{6, 6, 6, 6, 10}, r)
-	assert.Equal(t, []int{9}, rr)
-	assert.Equal(t, 2, s)
-}
-
-func TestCofDRollRote(t *testing.T) {
-	rolls := 0
-	roll := func(n int) int {
-		rolls++
-		if rolls%2 == 1 {
-			return 5
-		}
-		return 7
-	}
-
-	r, rr, s := cofdroll(5, 10, true, false, roll)
-	assert.Equal(t, []int{6, 6, 6, 6, 6}, r)
-	assert.Equal(t, []int{8, 8, 8, 8, 8}, rr)
-	assert.Equal(t, 5, s)
-}
-
-func TestCofDRollWeak(t *testing.T) {
-	rolls := 0
-	roll := func(n int) int {
-		rolls++
-		if rolls < 5 {
-			return 8
-		}
-		return 0
-	}
-
-	r, rr, s := cofdroll(5, 10, false, true, roll)
-	assert.Equal(t, []int{9, 9, 9, 9, 1}, r)
-	assert.Equal(t, []int(nil), rr)
-	assert.Equal(t, 3, s)
-}
-
-func TestCofDRollChance(t *testing.T) {
-	roll := func(n int) int {
-		return 8
-	}
-	r, rr, s := cofdroll(0, 10, false, false, roll)
-	assert.Equal(t, []int{9}, r)
-	assert.Equal(t, []int(nil), rr)
-	assert.Equal(t, 0, s)
-
-	roll = func(n int) int {
-		return 9
-	}
-	r, rr, s = cofdroll(0, 10, false, false, roll)
-	assert.Equal(t, []int{10}, r)
-	assert.Equal(t, []int(nil), rr)
-	assert.Equal(t, 1, s)
-}
-
-func TestProcessCofDArgs(t *testing.T) {
-	argstr := "1 + 2 + 3 + 4 - 10"
-	args := strings.Split(argstr, " ")
-	expected := 0
-	o, e := processCofDArgs(args)
-	assert.Nil(t, e)
-	assert.Equal(t, expected, o)
 }
