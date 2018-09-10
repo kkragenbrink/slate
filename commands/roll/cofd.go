@@ -24,56 +24,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
-	"strconv"
+	"github.com/kkragenbrink/slate/systems/cofd"
 	"strings"
 )
 
-func reverseSlice(input []string) []string {
-	if len(input) == 0 {
-		return input
-	}
-	return append(reverseSlice(input[1:]), input[0])
-}
-
-func processCofDArgs(args []string) (int, error) {
-	r := []int{0}
-
-	for _, arg := range reverseSlice(args) {
-		num, err := strconv.Atoi(arg)
-
-		if err != nil {
-			if arg == "+" {
-				continue
-			}
-
-			if arg == "-" {
-				x, r := r[len(r)-1], r[:len(r)-1]
-				x = x * -1
-				r = append(r, x)
-				continue
-			}
-
-			return 0, err
-		}
-
-		r = append(r, num)
-	}
-
-	results := 0
-	for _, num := range r {
-		results += num
-	}
-	return max(results, 0), nil
-}
-
 func (c *Command) cofd(ctx context.Context, args []string) string {
-	dice, err := processCofDArgs(args)
+	dice, successes, rolls, rerolls, err := cofd.New().Roll(args, c.flags.cofd.again, c.flags.cofd.rote, c.flags.cofd.weakness)
 	if err != nil {
 		return fmt.Sprintf("%s is not a valid dice algorithm", args)
 	}
-
-	rolls, rerolls, successes := cofdroll(dice, c.flags.cofd.again, c.flags.cofd.rote, c.flags.cofd.weakness, rand.Intn)
 	return c.formatCofDResults(dice, rolls, rerolls, successes)
 }
 
@@ -126,60 +85,4 @@ func (c *Command) formatCofDResults(dice int, rolls []int, rerolls []int, succes
 
 	// send it
 	return buff.String()
-}
-
-func max(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func cofdroll(dice, again int, rote bool, weak bool, roll func(int) int) (rolls []int, rerolls []int, successes int) {
-	rrn := 0
-	rtm := dice
-
-	if dice == 0 {
-		rtm = 1
-	}
-
-	// roll some dice
-	for i := 0; i < rtm; i++ {
-		die := roll(10) + 1
-		rolls = append(rolls, die)
-
-		if dice == 0 {
-			if die == 10 {
-				successes++
-			}
-			continue
-		}
-
-		if die < 8 && rote {
-			die = roll(10) + 1
-			rerolls = append(rerolls, die)
-		}
-
-		if die >= 8 {
-			successes++
-		}
-
-		if die >= again {
-			rrn++
-		}
-
-		if weak && die == 1 {
-			successes--
-		}
-	}
-
-	// handle rerolls
-	if rrn > 0 {
-		r, rr, s := cofdroll(rrn, again, rote, weak, roll)
-		rerolls = append(rerolls, r...)
-		rerolls = append(rerolls, rr...)
-		successes = successes + s
-	}
-
-	return rolls, rerolls, max(successes, 0)
 }
