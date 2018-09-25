@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"strconv"
 )
 
 // TestNew tests the New() function with all environment variables already set.
@@ -35,6 +36,18 @@ func TestNew(t *testing.T) {
 	expectedDiscordToken := "test"
 	os.Setenv("DISCORD_TOKEN", expectedDiscordToken)
 
+	dbhost := os.Getenv("DATABASE_HOST")
+	dbport := os.Getenv("DATABASE_PORT")
+	dbuser := os.Getenv("DATABASE_USER")
+	dbpass := os.Getenv("DATABASE_PASS")
+	dbname := os.Getenv("DATABASE_NAME")
+	expectedDatabase := &Database{"localhost", 1234, "test", "test", "test"}
+	os.Setenv("DATABASE_HOST", expectedDatabase.Host)
+	os.Setenv("DATABASE_PORT", strconv.Itoa(expectedDatabase.Port))
+	os.Setenv("DATABASE_USER", expectedDatabase.User)
+	os.Setenv("DATABASE_PASS", expectedDatabase.Pass)
+	os.Setenv("DATABASE_NAME", expectedDatabase.Name)
+
 	// run tests
 	cfg, err := New()
 	assert.Nil(t, err)
@@ -42,10 +55,85 @@ func TestNew(t *testing.T) {
 
 	// tear down
 	os.Setenv("DISCORD_TOKEN", dt)
+	os.Setenv("DATABASE_HOST", dbhost)
+	os.Setenv("DATABASE_PORT", dbport)
+	os.Setenv("DATABASE_USER", dbuser)
+	os.Setenv("DATABASE_PASS", dbpass)
+	os.Setenv("DATABASE_NAME", dbname)
+}
+
+// TestCommandPrefixCustom tests initCommandPrefix for a custom case
+func TestCommandPrefix_Custom(t *testing.T) {
+	// setup
+	cp := os.Getenv("COMMAND_PREFIX")
+	expectedCommandPrefix := "%"
+	os.Setenv("COMMAND_PREFIX", expectedCommandPrefix)
+
+	// run tests
+	prefix := initCommandPrefix()
+	assert.Equal(t, expectedCommandPrefix, prefix)
+
+	// tear down
+	os.Setenv("COMMAND_PREFIX", cp)
+}
+
+// TestDatabase_Missing test initDatabase without the required parameters.
+func TestDatabase_Missing(t *testing.T) {
+	// setup
+	host := os.Getenv("DATABASE_HOST")
+	port := os.Getenv("DATABASE_PORT")
+	user := os.Getenv("DATABASE_USER")
+	pass := os.Getenv("DATABASE_PASS")
+	name := os.Getenv("DATABASE_NAME")
+
+	os.Setenv("DATABASE_HOST", "")
+	os.Setenv("DATABASE_PORT", "")
+	os.Setenv("DATABASE_USER", "")
+	os.Setenv("DATABASE_PASS", "")
+	os.Setenv("DATABASE_NAME", "")
+
+	// run tests
+	dc, err := initDatabase()
+	assert.Error(t, err)
+
+	os.Setenv("DATABASE_HOST", "localhost")
+	dc, err = initDatabase()
+	assert.Error(t, err)
+
+	os.Setenv("DATABASE_PORT", "1234")
+	dc, err = initDatabase()
+	assert.Error(t, err)
+
+	os.Setenv("DATABASE_USER", "test")
+	dc, err = initDatabase()
+	assert.Error(t, err)
+
+	os.Setenv("DATABASE_PASS", "test")
+	dc, err = initDatabase()
+	assert.Error(t, err)
+
+	os.Setenv("DATABASE_NAME", "test")
+	expected := &Database{
+		Host: "localhost",
+		Port: 1234,
+		User: "test",
+		Pass: "test",
+		Name: "test",
+	}
+	dc, err = initDatabase()
+	assert.Equal(t, expected, dc)
+	assert.Nil(t, err)
+
+	// teardown
+	os.Setenv("DATABASE_HOST", host)
+	os.Setenv("DATABASE_PORT", port)
+	os.Setenv("DATABASE_USER", user)
+	os.Setenv("DATABASE_PASS", pass)
+	os.Setenv("DATABASE_NAME", name)
 }
 
 // TestNoDiscordToken tests initDiscordToken without the environment variable.
-func TestNoDiscordToken(t *testing.T) {
+func TestDiscordToken_Missing(t *testing.T) {
 	dt, err := initDiscordToken()
 	assert.Equal(t, "", dt)
 	assert.Error(t, err)

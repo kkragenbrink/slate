@@ -29,12 +29,21 @@ import (
 	"github.com/kkragenbrink/slate/bot"
 	"github.com/kkragenbrink/slate/commands"
 	"github.com/kkragenbrink/slate/config"
+	"github.com/kkragenbrink/slate/database"
 	"github.com/kkragenbrink/slate/discord"
 )
 
 func main() {
 	// Setting up configuration profile
 	cfg, err := config.New()
+
+	// Establish a Database connection
+	db, err := database.New(cfg)
+	if err != nil {
+		fmt.Printf("could not connect to the database: %+v", err)
+		os.Exit(1)
+	}
+	defer db.Close()
 
 	// Establish a Discord connection
 	session, err := discord.New(cfg)

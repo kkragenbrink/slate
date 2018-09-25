@@ -24,15 +24,29 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"strconv"
 )
 
 // ErrNoDiscordToken is thrown when the environment variable isn't set
 var ErrNoDiscordToken = errors.New("$DISCORD_TOKEN is required")
 
+// ErrDatabaseInfo is thrown when the environment variables for the database aren't set
+var ErrDatabaseInfo = errors.New("$DATABASE_HOST, $DATABASE_PORT, $DATABASE_USER, $DATABASE_PASS, and $DATABASE_NAME are required")
+
+// Database holds configuration information for the database connection
+type Database struct {
+	Host string
+	Port int
+	User string
+	Pass string
+	Name string
+}
+
 // Config holds configuration information which is necessary to run slate.
 // This information is passed in at runtime via environment variables.
 type Config struct {
 	CommandPrefix string
+	Database      *Database
 	DiscordToken  string
 }
 
@@ -45,11 +59,18 @@ func New() (*Config, error) {
 		return nil, err
 	}
 
+	// Initialize the database
+	database, err := initDatabase()
+	if err != nil {
+		return nil, err
+	}
+
 	// Initialize the Command Prefix
 	commandPrefix := initCommandPrefix()
 
 	cfg := &Config{
 		DiscordToken:  discordToken,
+		Database:      database,
 		CommandPrefix: commandPrefix,
 	}
 
@@ -59,10 +80,29 @@ func New() (*Config, error) {
 func initCommandPrefix() string {
 	prefix := os.Getenv("COMMAND_PREFIX")
 	if prefix == "" {
-		return "$late "
+		return "$"
 	}
 
 	return prefix
+}
+
+func initDatabase() (*Database, error) {
+	host := os.Getenv("DATABASE_HOST")
+	portStr := os.Getenv("DATABASE_PORT")
+	user := os.Getenv("DATABASE_USER")
+	pass := os.Getenv("DATABASE_PASS")
+	name := os.Getenv("DATABASE_NAME")
+
+	if host == "" || portStr == "" || user == "" || pass == "" || name == "" {
+		return nil, ErrDatabaseInfo
+	}
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return nil, ErrDatabaseInfo
+	}
+
+	return &Database{host, port, user, pass, name}, nil
 }
 
 func initDiscordToken() (string, error) {
