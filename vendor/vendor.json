@@ -15,6 +15,12 @@
 			"revisionTime": "2018-04-04T15:55:14Z"
 		},
 		{
+			"checksumSHA1": "aye2fEJgs1/aMqreUmFdiHOGZEY=",
+			"path": "github.com/bwmarrin/snowflake",
+			"revision": "68117e6bbede4dd72d70c7a58d73348ead068509",
+			"revisionTime": "2018-04-12T01:05:44Z"
+		},
+		{
 			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
 			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
 			"path": "github.com/davecgh/go-spew/spew",
@@ -26,6 +32,36 @@
 			"path": "github.com/gorilla/websocket",
 			"revision": "5ed622c449da6d44c3c8329331ff47a9e5844f71",
 			"revisionTime": "2018-06-05T20:25:52Z"
+		},
+		{
+			"checksumSHA1": "F45m6rdNc9pgzu5vWN1n1Rwbk4A=",
+			"path": "github.com/jmoiron/sqlx",
+			"revision": "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849",
+			"revisionTime": "2018-06-14T18:06:43Z"
+		},
+		{
+			"checksumSHA1": "bXFrevmVL5Q2EwYlRHlPihxvAJA=",
+			"path": "github.com/jmoiron/sqlx/reflectx",
+			"revision": "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849",
+			"revisionTime": "2018-06-14T18:06:43Z"
+		},
+		{
+			"checksumSHA1": "q+dertYFOBviMOPcBLeMtXPHh6U=",
+			"path": "github.com/jmoiron/sqlx/types",
+			"revision": "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849",
+			"revisionTime": "2018-06-14T18:06:43Z"
+		},
+		{
+			"checksumSHA1": "s6eyIXpJ7VAU06FM27GcEBM/5lo=",
+			"path": "github.com/lib/pq",
+			"revision": "90697d60dd844d5ef6ff15135d0203f65d2f53b8",
+			"revisionTime": "2018-05-23T17:54:26Z"
+		},
+		{
+			"checksumSHA1": "ATnwV0POluBNQEMjPdylodz0oK0=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "90697d60dd844d5ef6ff15135d0203f65d2f53b8",
+			"revisionTime": "2018-05-23T17:54:26Z"
 		},
 		{
 			"checksumSHA1": "ljd3FhYRJ91cLZz3wsH9BQQ2JbA=",

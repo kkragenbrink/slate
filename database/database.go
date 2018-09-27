@@ -21,15 +21,16 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
+	"strconv"
+
+	"github.com/jmoiron/sqlx"
 	"github.com/kkragenbrink/slate/config"
 
-	"database/sql"
-	"github.com/jmoiron/sqlx"
 	// load drivers, but no need for pq itself
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 // ErrNewDatabase is thrown when slate detects that it has connected to a new database.
@@ -45,6 +46,7 @@ var DatabaseVersion = 1
 
 // New returns a new database connection, which matches the interface used by
 // our sheet models.
+// todo: need unit tests
 func New(cfg *config.Config) (*sqlx.DB, error) {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Pass, cfg.Database.Name)

@@ -23,8 +23,9 @@ package config
 import (
 	"os"
 
-	"github.com/pkg/errors"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 // ErrNoDiscordToken is thrown when the environment variable isn't set
@@ -32,6 +33,9 @@ var ErrNoDiscordToken = errors.New("$DISCORD_TOKEN is required")
 
 // ErrDatabaseInfo is thrown when the environment variables for the database aren't set
 var ErrDatabaseInfo = errors.New("$DATABASE_HOST, $DATABASE_PORT, $DATABASE_USER, $DATABASE_PASS, and $DATABASE_NAME are required")
+
+// ErrNodeID is thrown when an invalid node ID is submitted
+var ErrNodeID = errors.New("$NODE_ID must be an integer")
 
 // Database holds configuration information for the database connection
 type Database struct {
@@ -48,6 +52,7 @@ type Config struct {
 	CommandPrefix string
 	Database      *Database
 	DiscordToken  string
+	NodeID        int
 }
 
 // New returns a new configuration object, and initializes th at object from
@@ -68,10 +73,18 @@ func New() (*Config, error) {
 	// Initialize the Command Prefix
 	commandPrefix := initCommandPrefix()
 
+	// Initialize the Node ID
+	nodeID, err := initNodeID()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the configuration object
 	cfg := &Config{
 		DiscordToken:  discordToken,
 		Database:      database,
 		CommandPrefix: commandPrefix,
+		NodeID:        nodeID,
 	}
 
 	return cfg, nil
@@ -111,4 +124,16 @@ func initDiscordToken() (string, error) {
 		return "", ErrNoDiscordToken
 	}
 	return token, nil
+}
+
+func initNodeID() (int, error) {
+	idstr := os.Getenv("NODE_ID")
+	if idstr == "" {
+		return 1, nil
+	}
+	id, err := strconv.Atoi(idstr)
+	if err != nil {
+		return 0, ErrNodeID
+	}
+	return id, nil
 }

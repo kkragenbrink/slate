@@ -31,11 +31,19 @@ import (
 	"github.com/kkragenbrink/slate/config"
 	"github.com/kkragenbrink/slate/database"
 	"github.com/kkragenbrink/slate/discord"
+	"github.com/kkragenbrink/slate/snowflake"
 )
 
 func main() {
 	// Setting up configuration profile
 	cfg, err := config.New()
+
+	// Set up the snowflake node
+	node, err := snowflake.New(cfg)
+	if err != nil {
+		fmt.Printf("could not establish snowflake node: %+v", err)
+		os.Exit(1)
+	}
 
 	// Establish a Database connection
 	db, err := database.New(cfg)
@@ -61,7 +69,7 @@ func main() {
 	defer b.Stop()
 
 	// Set up the bot commands
-	commands.Setup(b)
+	commands.Setup(b, db, node)
 
 	// wait for a shutdown signal
 	waitForSignals()
