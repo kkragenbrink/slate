@@ -18,16 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package commands
+package snowflake
 
 import (
 	"github.com/bwmarrin/snowflake"
-	"github.com/jmoiron/sqlx"
-	"github.com/kkragenbrink/slate/bot"
-	"github.com/kkragenbrink/slate/commands/roll"
+	"github.com/kkragenbrink/slate/config"
 )
 
-// Setup adds all available commands to the bot
-func Setup(b *bot.Bot, db *sqlx.DB, node *snowflake.Node) {
-	b.AddCommand(&roll.Command{})
+// New creates a new Snowflake node for generating snowflake IDs.
+func New(cfg *config.Config) (*snowflake.Node, error) {
+	return snowflake.NewNode(int64(cfg.NodeID))
 }

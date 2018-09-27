@@ -24,8 +24,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"strconv"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestNew tests the New() function with all environment variables already set.
@@ -52,6 +53,7 @@ func TestNew(t *testing.T) {
 	cfg, err := New()
 	assert.Nil(t, err)
 	assert.Equal(t, expectedDiscordToken, cfg.DiscordToken)
+	assert.Equal(t, expectedDatabase, cfg.Database)
 
 	// tear down
 	os.Setenv("DISCORD_TOKEN", dt)
@@ -137,4 +139,20 @@ func TestDiscordToken_Missing(t *testing.T) {
 	dt, err := initDiscordToken()
 	assert.Equal(t, "", dt)
 	assert.Error(t, err)
+}
+
+// TestNodeID_Error tests that NodeIDs must be valid
+func TestNodeID_Error(t *testing.T) {
+	// setup
+	envid := os.Getenv("NODE_ID")
+	expectedNodeID := "five"
+	os.Setenv("NODE_ID", expectedNodeID)
+
+	// run tests
+	id, err := initNodeID()
+	assert.Equal(t, 0, id)
+	assert.Equal(t, err, ErrNodeID)
+
+	// teardown
+	os.Setenv("NODE_ID", envid)
 }

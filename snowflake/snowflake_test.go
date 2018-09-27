@@ -18,16 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package commands
+package snowflake
 
 import (
-	"github.com/bwmarrin/snowflake"
-	"github.com/jmoiron/sqlx"
-	"github.com/kkragenbrink/slate/bot"
-	"github.com/kkragenbrink/slate/commands/roll"
+	"testing"
+
+	"github.com/kkragenbrink/slate/config"
+	"github.com/stretchr/testify/assert"
 )
 
-// Setup adds all available commands to the bot
-func Setup(b *bot.Bot, db *sqlx.DB, node *snowflake.Node) {
-	b.AddCommand(&roll.Command{})
+func TestNew(t *testing.T) {
+	cfg := new(config.Config)
+	cfg.NodeID = 1
+	_, err := New(cfg)
+	assert.Nil(t, err)
 }
