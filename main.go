@@ -37,6 +37,10 @@ import (
 func main() {
 	// Setting up configuration profile
 	cfg, err := config.New()
+	if err != nil {
+		fmt.Printf("configuration error: %+v", err)
+		os.Exit(1)
+	}
 
 	// Set up the snowflake node
 	node, err := snowflake.New(cfg)
