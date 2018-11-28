@@ -18,58 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package interfaces
 
 import (
+	"context"
 	"fmt"
 	"github.com/kkragenbrink/slate/infrastructures"
-	"github.com/kkragenbrink/slate/interfaces"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/kkragenbrink/slate/usecases"
+	"github.com/kkragenbrink/slate/usecases/roll"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
+// RollHandler handles incoming roll messages and sends them to the roll usecase.
+func RollHandler(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) (string, error) {
+	roller, err := roll.Roll(ctx, user, channel, fields)
 	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+		// todo: Wrap probably
+		return "", err
 	}
-
-	// Establish as a Discord Bot
-	bot, err := infrastructures.NewBot(set)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Initialize Discord interfaces
-	interfaces.Init(bot)
-
-	// Start the bot
-	err = bot.Start()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown our Discord Bot
-	err = bot.Stop()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(2)
-	}
+	return fmt.Sprintf("<@%s> %s", user.ID, roller.ToString()), nil
 }
 
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+// Init adds all message handlers to the bot.
+func Init(bot *infrastructures.Bot) {
+	bot.AddHandler("roll", RollHandler)
 }
