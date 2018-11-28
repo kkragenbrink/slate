@@ -18,58 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package util
 
 import (
 	"fmt"
-	"github.com/kkragenbrink/slate/infrastructures"
-	"github.com/kkragenbrink/slate/interfaces"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"strings"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Establish as a Discord Bot
-	bot, err := infrastructures.NewBot(set)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Initialize Discord interfaces
-	interfaces.Init(bot)
-
-	// Start the bot
-	err = bot.Start()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown our Discord Bot
-	err = bot.Stop()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(2)
-	}
-}
-
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+// ArrayToString creates a delimited string out of an array of primitives.
+func ArrayToString(v interface{}, delim string) string {
+	return strings.Join(strings.Fields(fmt.Sprint(v)), delim)
 }
