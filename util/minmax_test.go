@@ -18,58 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package util
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/infrastructures"
-	"github.com/kkragenbrink/slate/interfaces"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Establish as a Discord Bot
-	bot, err := infrastructures.NewBot(set)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Initialize Discord interfaces
-	interfaces.Init(bot)
-
-	// Start the bot
-	err = bot.Start()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown our Discord Bot
-	err = bot.Stop()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(2)
-	}
+func TestMin(t *testing.T) {
+	var got int
+	got = Min(2, 0)
+	assert.Equal(t, 0, got)
+	got = Min(0, 2)
+	assert.Equal(t, 0, got)
+	got = Min(-1, 2)
+	assert.Equal(t, -1, got)
+	got = Min(100, 5)
+	assert.Equal(t, 5, got)
 }
 
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+func TestMax(t *testing.T) {
+	var got int
+	got = Max(2, 0)
+	assert.Equal(t, 2, got)
+	got = Max(0, 2)
+	assert.Equal(t, 2, got)
+	got = Max(-1, 2)
+	assert.Equal(t, 2, got)
+	got = Max(100, 5)
+	assert.Equal(t, 100, got)
 }

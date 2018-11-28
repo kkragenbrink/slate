@@ -3,6 +3,9 @@
 /.vscode
 /launch.json
 
+# Vendor files
+/vendor
+
 # Build files
 /slate
 /slate.exe

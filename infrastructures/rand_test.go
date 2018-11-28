@@ -18,58 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package infrastructures
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/infrastructures"
-	"github.com/kkragenbrink/slate/interfaces"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Establish as a Discord Bot
-	bot, err := infrastructures.NewBot(set)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Initialize Discord interfaces
-	interfaces.Init(bot)
-
-	// Start the bot
-	err = bot.Start()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown our Discord Bot
-	err = bot.Stop()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(2)
-	}
-}
-
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+func TestMathRand(t *testing.T) {
+	var got []int
+	got = MathRand(1, 1, 1)
+	assert.Equal(t, []int{1}, got)
+	got = MathRand(3, 1, 1)
+	assert.Equal(t, []int{1, 1, 1}, got)
+	got = MathRand(1, 1, 10)
+	assert.True(t, 1 <= got[0] && got[0] <= 10)
 }
