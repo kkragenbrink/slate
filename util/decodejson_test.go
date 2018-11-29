@@ -18,54 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package util
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"strings"
+	"testing"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	bot, err := services.NewBot(set)
-	handleError(err, 1)
-	ws := services.NewWebService(set)
-
-	// Start Services
-	err = bot.Start()
-	handleError(err, 1)
-	err = ws.Start()
-	handleError(err, 1)
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown services
-	err = ws.Stop()
-	handleError(err, 2)
-	err = bot.Stop()
-	handleError(err, 2)
+func TestDecodeJSON(t *testing.T) {
+	s := `{"test":"value"}`
+	r := strings.NewReader(s)
+	bytes := []byte(s)
+	expected := (json.RawMessage)(bytes)
+	out, err := Decodejson(r)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, out)
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
-}
-
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+func TestDecodeJSON_BadData(t *testing.T) {
+	s := `{"test":bad}`
+	r := strings.NewReader(s)
+	out, err := Decodejson(r)
+	assert.Error(t, err)
+	assert.Nil(t, out)
 }

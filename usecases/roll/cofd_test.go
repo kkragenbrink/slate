@@ -23,70 +23,79 @@ package roll
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestRoll(t *testing.T) {
+type CofDTestSuite struct {
+	suite.Suite
+}
+
+func TestCofD(t *testing.T) {
+	suite.Run(t, new(CofDTestSuite))
+}
+
+func (suite *CofDTestSuite) TestRoll() {
 	exs := 1
 	exr := []int{6, 6, 6, 6, 8}
 	exrr := []int(nil)
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{"5"})
-	assert.Nil(t, err)
-	assert.Equal(t, exs, o.Results.Successes)
-	assert.Equal(t, exr, o.Results.Rolls)
-	assert.Equal(t, exrr, o.Results.Rerolls)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exs, o.Results.Successes)
+	assert.Equal(suite.T(), exr, o.Results.Rolls)
+	assert.Equal(suite.T(), exrr, o.Results.Rerolls)
 }
 
-func TestRollAgain(t *testing.T) {
+func (suite *CofDTestSuite) TestRollAgain() {
 	exs := 2
 	exr := []int{6, 6, 6, 6, 10}
 	exrr := []int{9}
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{"5"})
-	assert.Nil(t, err)
-	assert.Equal(t, exs, o.Results.Successes)
-	assert.Equal(t, exr, o.Results.Rolls)
-	assert.Equal(t, exrr, o.Results.Rerolls)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exs, o.Results.Successes)
+	assert.Equal(suite.T(), exr, o.Results.Rolls)
+	assert.Equal(suite.T(), exrr, o.Results.Rerolls)
 }
 
-func TestRollRote(t *testing.T) {
+func (suite *CofDTestSuite) TestRollRote() {
 	exs := 4
 	exr := []int{6, 6, 6, 8, 6}
 	exrr := []int{8, 6, 8, 8}
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, true, false)
 	err := o.Roll(context.Background(), []string{"5"})
-	assert.Nil(t, err)
-	assert.Equal(t, exs, o.Results.Successes)
-	assert.Equal(t, exr, o.Results.Rolls)
-	assert.Equal(t, exrr, o.Results.Rerolls)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exs, o.Results.Successes)
+	assert.Equal(suite.T(), exr, o.Results.Rolls)
+	assert.Equal(suite.T(), exrr, o.Results.Rerolls)
 }
 
-func TestRollWeak(t *testing.T) {
+func (suite *CofDTestSuite) TestRollWeak() {
 	exs := 3
 	exr := []int{9, 9, 9, 9, 1}
 	exrr := []int(nil)
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, true)
 	err := o.Roll(context.Background(), []string{"5"})
-	assert.Nil(t, err)
-	assert.Equal(t, exs, o.Results.Successes)
-	assert.Equal(t, exr, o.Results.Rolls)
-	assert.Equal(t, exrr, o.Results.Rerolls)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exs, o.Results.Successes)
+	assert.Equal(suite.T(), exr, o.Results.Rolls)
+	assert.Equal(suite.T(), exrr, o.Results.Rerolls)
 }
 
-func TestRollChance(t *testing.T) {
+func (suite *CofDTestSuite) TestRollChance() {
 	exs := 1
 	exr := []int{10}
 	exrr := []int(nil)
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{})
-	assert.Nil(t, err)
-	assert.Equal(t, exs, o.Results.Successes)
-	assert.Equal(t, exr, o.Results.Rolls)
-	assert.Equal(t, exrr, o.Results.Rerolls)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exs, o.Results.Successes)
+	assert.Equal(suite.T(), exr, o.Results.Rolls)
+	assert.Equal(suite.T(), exrr, o.Results.Rerolls)
 }
 
-func TestToString(t *testing.T) {
+func (suite *CofDTestSuite) TestToString() {
 	o := genMockCofDRollSystem(mockRoller([]int{}, []int{}), 9, 4, true, true)
 	o.Dice = 4
 	o.Verbose = true
@@ -95,7 +104,7 @@ func TestToString(t *testing.T) {
 	o.Results.Rerolls = []int{8, 4}
 	str := o.ToString()
 	ex := "rolled 4 CofD Dice (with 9-Again, Rote, Weakness) for 4 Successes. Exceptional success! Rolls: [8 8 9 7] Rerolls: [8 4]"
-	assert.Equal(t, ex, str)
+	assert.Equal(suite.T(), ex, str)
 }
 
 func mockRoller(r []int, rr []int) roller {
