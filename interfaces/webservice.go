@@ -21,40 +21,53 @@
 package interfaces
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/kkragenbrink/slate/usecases/roll"
+	"github.com/kkragenbrink/slate/util"
+	"net/http"
 )
 
-// A Router contains methods for adding methods to handle http requests
-type Router interface {
-	HandlePost(string, WebHandler)
+// The WebServiceHandler stores information useful to the web service routes
+type WebServiceHandler struct {
+	Bot Bot
 }
 
-// A WebHandler is an http request handler
-type WebHandler func(ctx context.Context, body json.RawMessage) (interface{}, error)
-
-// A WebRoll is a roll command, and is used to determine the system
-type WebRoll struct {
+// A Roll is a roll command, and is used to determine the system
+type Roll struct {
 	System string `json:"system"`
 }
 
-// WebRollHandler handles incoming roll messages and sends them to the roll usecase.
-func WebRollHandler(ctx context.Context, body json.RawMessage) (interface{}, error) {
-	var r WebRoll
-	err := json.Unmarshal(body, &r)
+// Roll handles the roll usecase from the web.
+func (ws *WebServiceHandler) Roll(res http.ResponseWriter, req *http.Request) {
+	// decode
+	body, err := util.Decodejson(req.Body)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	req.Body.Close()
+	// find the system
+	var r Roll
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// get a roller
 	rs, err := roll.NewRoller(r.System, body)
 	if err != nil {
-		// todo: log
-		return 400, roll.ErrInvalidRollSystem
+		http.Error(res, roll.ErrInvalidRollSystem.Error(), http.StatusBadRequest)
+		return
 	}
-	err = rs.Roll(ctx, nil)
+	// roll
+	err = rs.Roll(req.Context(), nil)
 	if err != nil {
-		return 500, err
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	return rs, nil
-}
-
-func initWebServices(router Router) {
-	router.HandlePost("/roll", WebRollHandler)
+	// encode the results
+	err = json.NewEncoder(res).Encode(rs)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 }

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package infrastructures
+package services
 
 import (
 	"context"
@@ -26,7 +26,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/interfaces"
 	"github.com/kkragenbrink/slate/settings"
-	"github.com/kkragenbrink/slate/usecases"
 	"github.com/pkg/errors"
 	"strings"
 	"sync"
@@ -47,14 +46,16 @@ type DiscordSession interface {
 
 // The Bot contains the connection to discord as well as the message handlers.
 type Bot struct {
-	settings *settings.Settings
-	handlers []*MessageHandler
-	session  DiscordSession
-	mutex    *sync.Mutex
+	logger     *SlateLogger
+	settings   *settings.Settings
+	handlers   []*BotMessageHandler
+	svchandler *interfaces.BotServiceHandler
+	session    DiscordSession
+	mutex      *sync.Mutex
 }
 
-// A MessageHandler is a command name and a handler function
-type MessageHandler struct {
+// A BotMessageHandler is a command name and a handler function
+type BotMessageHandler struct {
 	command string
 	handle  interfaces.BotHandler
 }
@@ -70,6 +71,8 @@ func NewBot(set *settings.Settings) (*Bot, error) {
 	}
 
 	bot := new(Bot)
+	bot.logger = NewSlateLogger()
+	bot.initServiceHandler()
 	bot.settings = set
 	bot.session = session
 	bot.mutex = &sync.Mutex{}
@@ -77,12 +80,18 @@ func NewBot(set *settings.Settings) (*Bot, error) {
 	return bot, nil
 }
 
-// AddHandler adds a new MessageHandler to the bot.
+func (bot *Bot) initServiceHandler() {
+	bs := new(interfaces.BotServiceHandler)
+	bot.AddHandler("roll", bs.Roll)
+	bot.svchandler = bs
+}
+
+// AddHandler adds a new BotHandler to the bot.
 func (bot *Bot) AddHandler(command string, handle interfaces.BotHandler) error {
 	if bot.hasHandler(command) {
 		return errDuplicateHandler
 	}
-	handler := new(MessageHandler)
+	handler := new(BotMessageHandler)
 	handler.command = command
 	handler.handle = handle
 	bot.handlers = append(bot.handlers, handler)
@@ -103,6 +112,7 @@ func (bot *Bot) handleMessageCreateInterface(session *discordgo.Session, msg *di
 }
 
 func (bot *Bot) handleMessageCreate(session DiscordSession, msg *discordgo.MessageCreate) {
+	start := time.Now()
 	if !strings.HasPrefix(msg.Content, bot.settings.CommandPrefix) {
 		return // this is not our command to handle
 	}
@@ -114,11 +124,13 @@ func (bot *Bot) handleMessageCreate(session DiscordSession, msg *discordgo.Messa
 	if !bot.hasHandler(name) {
 		return // still not our command to handle
 	}
+	log := bot.logger.NewDiscordLogEntry(msg, name, fields)
 
 	// todo: this should be a setting instead of a magic number
 	timeout, err := time.ParseDuration("5s")
 	if err != nil {
 		bot.session.ChannelMessageSend(msg.ChannelID, "Woops, Something went wrong!")
+		log.Write(LogError, 0, time.Since(start))
 		return
 	}
 	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
@@ -128,22 +140,17 @@ func (bot *Bot) handleMessageCreate(session DiscordSession, msg *discordgo.Messa
 	defer bot.mutex.Unlock()
 	for _, handler := range bot.handlers {
 		if handler.command == name {
-			// get channel details
-			dc, err := bot.session.Channel(msg.ChannelID)
-			if err != nil {
-				// todo: log error
-				bot.session.ChannelMessageSend(msg.ChannelID, "Woops, Something went wrong!")
-				return
-			}
-			channel := usecases.NewChannel(dc.ID, dc.GuildID)
-
-			// get user details
-			user := usecases.NewUser(msg.Author.ID, msg.Author.Username)
-
 			// handle it
-			response := handler.handle(ctx, user, channel, fields)
-			bot.session.ChannelMessageSend(msg.ChannelID, response)
-
+			results, err := handler.handle(ctx, msg, fields)
+			if err != nil {
+				response := fmt.Sprintf("%s %s", msg.Author.Mention(), err.Error())
+				bot.session.ChannelMessageSend(msg.ChannelID, response)
+				log.Write(LogWarn, len(response), time.Since(start))
+			} else {
+				response := fmt.Sprintf("%s %s", msg.Author.Mention(), results)
+				bot.session.ChannelMessageSend(msg.ChannelID, response)
+				log.Write(LogInfo, len(response), time.Since(start))
+			}
 			return
 		}
 	}

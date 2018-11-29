@@ -23,43 +23,46 @@ package interfaces
 import (
 	"context"
 	"flag"
-	"fmt"
-	"github.com/kkragenbrink/slate/usecases"
+	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/usecases/roll"
+	"github.com/pkg/errors"
 )
+
+// The BotServiceHandler stores information useful to the bot service message handlers
+type BotServiceHandler struct {
+}
 
 // A Bot is a repository for discord command handlers
 type Bot interface {
 	AddHandler(string, BotHandler) error
 }
 
-// A BotHandler is a handler for a specific discord command
-type BotHandler func(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) string
+// A BotHandler is a message handler for discord messages
+type BotHandler func(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error)
 
-// BotRollHandler handles incoming roll messages and sends them to the roll usecase.
-func BotRollHandler(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) string {
+// Roll handles incoming roll messages and sends them to the roll usecase.
+func (bs *BotServiceHandler) Roll(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error) {
+	// determine the system
 	fs := &flag.FlagSet{}
 	fs.Usage = func() {}
 	var system string
 	fs.StringVar(&system, "system", "cofd", "the dice system to use")
 	fs.Parse(fields)
-
+	// get a roller
 	cfs := &flag.FlagSet{}
 	rs, err := roll.NewRoller(system, nil)
 	if err != nil {
 		// todo: log
-		return fmt.Sprintf("<@%s> %s", user.ID, err.Error())
+		return "", errors.Wrap(err, "could not get a roller")
 	}
 	rs.Flags(cfs)
 	cfs.Parse(fields)
+	// roll
 	err = rs.Roll(ctx, cfs.Args())
 	if err != nil {
 		// todo: log
-		return fmt.Sprintf("<@%s> %s", user.ID, err.Error())
+		return "", errors.Wrap(err, "roll failed")
 	}
-	return fmt.Sprintf("<@%s> %s", user.ID, rs.ToString())
-}
-
-func initBotServices(bot Bot) {
-	bot.AddHandler("roll", BotRollHandler)
+	// send the results
+	return rs.ToString(), nil
 }

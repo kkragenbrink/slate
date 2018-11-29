@@ -18,37 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package usecases
+package util
 
-// Channel is a Discord channel
-type Channel struct {
-	ID    string
-	Guild *Guild
-}
+import (
+	"encoding/json"
+	"github.com/pkg/errors"
+	"io"
+	"io/ioutil"
+)
 
-// Guild is a Discord guild
-type Guild struct {
-	ID string
-}
-
-// User is a Discord user
-type User struct {
-	ID   string
-	Name string
-}
-
-// NewChannel creates a new Channel and assigns it to a Guild
-func NewChannel(id, gid string) *Channel {
-	return &Channel{
-		ID:    id,
-		Guild: &Guild{ID: gid},
+// Decodejson reads json from an io.Reader (like the body of an http.Request) and converts it to a raw JSON message.
+func Decodejson(r io.Reader) (json.RawMessage, error) {
+	raw, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not read request body")
 	}
-}
-
-// NewUser creates a new User
-func NewUser(id string, name string) *User {
-	return &User{
-		ID:   id,
-		Name: name,
+	var decoded json.RawMessage
+	err = json.Unmarshal(raw, &decoded)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not decode JSON")
 	}
+	return decoded, nil
 }

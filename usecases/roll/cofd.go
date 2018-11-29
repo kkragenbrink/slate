@@ -48,11 +48,11 @@ type CofDRollSystem struct {
 
 // Flags sets up the flag rules for the system
 func (rs *CofDRollSystem) Flags(fs *flag.FlagSet) {
-	fs.BoolVar(&rs.Verbose, "Verbose", false, "Whether to use a Verbose output.")
-	fs.IntVar(&rs.Again, "Again", 10, "The n-Again of the rs.")
-	fs.IntVar(&rs.Exceptional, "Exceptional", 5, "The number of Successes needed for Exceptional success.")
-	fs.BoolVar(&rs.Rote, "Rote", false, "Whether the role is a Rote action.")
-	fs.BoolVar(&rs.Weakness, "Weakness", false, "Whether the rs is made with Weakness.")
+	fs.BoolVar(&rs.Verbose, "verbose", false, "Whether to use a Verbose output.")
+	fs.IntVar(&rs.Again, "again", 10, "The n-Again of the rs.")
+	fs.IntVar(&rs.Exceptional, "exceptional", 5, "The number of Successes needed for Exceptional success.")
+	fs.BoolVar(&rs.Rote, "rote", false, "Whether the role is a Rote action.")
+	fs.BoolVar(&rs.Weakness, "weakness", false, "Whether the rs is made with Weakness.")
 }
 
 // SetRand assigns a random number generator to the system

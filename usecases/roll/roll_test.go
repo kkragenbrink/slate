@@ -18,10 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package interfaces
+package roll
 
-// Init adds all message handlers to various services
-func Init(bot Bot, router Router) {
-	initBotServices(bot)
-	initWebServices(router)
+import (
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
+
+func TestNewRoller(t *testing.T) {
+	roller, err := NewRoller("cofd", nil)
+	assert.Nil(t, err)
+	assert.IsType(t, &CofDRollSystem{}, roller)
+}
+
+func TestNewRoller_NoRoller(t *testing.T) {
+	_, err := NewRoller("test", nil)
+	assert.Error(t, err)
+}
+
+func TestNewRoller_WithBody(t *testing.T) {
+	raw := `{"dice": 5, "again": 10}`
+	body := (json.RawMessage)([]byte(raw))
+	roller, err := NewRoller("cofd", body)
+	assert.Nil(t, err)
+	assert.IsType(t, &CofDRollSystem{}, roller)
+	assert.Equal(t, 10, roller.(*CofDRollSystem).Again)
 }
