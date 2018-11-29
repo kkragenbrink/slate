@@ -2,4 +2,4 @@ build:
   languages:
     - go
 run:
-  bot: slate
+  web: slate

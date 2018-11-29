@@ -29,14 +29,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestInit tests the Init() function with all environment variables already set.
-// This should return a valid Settings{} struct and no errors.
 func TestInit(t *testing.T) {
 	// setup
 	dt := os.Getenv("DISCORD_TOKEN")
 	expectedDiscordToken := "test"
 	os.Setenv("DISCORD_TOKEN", expectedDiscordToken)
-
 	dbhost := os.Getenv("DATABASE_HOST")
 	dbport := os.Getenv("DATABASE_PORT")
 	dbuser := os.Getenv("DATABASE_USER")
@@ -64,7 +61,6 @@ func TestInit(t *testing.T) {
 	os.Setenv("DATABASE_NAME", dbname)
 }
 
-// TestCommandPrefixCustom tests initCommandPrefix for a custom case
 func TestCommandPrefix_Custom(t *testing.T) {
 	// setup
 	cp := os.Getenv("COMMAND_PREFIX")
@@ -134,14 +130,12 @@ func TestDatabase_Missing(t *testing.T) {
 	os.Setenv("DATABASE_NAME", name)
 }
 
-// TestNoDiscordToken tests initDiscordToken without the environment variable.
 func TestDiscordToken_Missing(t *testing.T) {
 	dt, err := initDiscordToken()
 	assert.Equal(t, "", dt)
 	assert.Error(t, err)
 }
 
-// TestNodeID_Error tests that NodeIDs must be valid
 func TestNodeID_Error(t *testing.T) {
 	// setup
 	envid := os.Getenv("NODE_ID")
@@ -151,8 +145,38 @@ func TestNodeID_Error(t *testing.T) {
 	// run tests
 	id, err := initNodeID()
 	assert.Equal(t, 0, id)
-	assert.Equal(t, err, ErrNodeID)
+	assert.Error(t, err)
 
 	// teardown
 	os.Setenv("NODE_ID", envid)
+}
+
+func TestPort_Custom(t *testing.T) {
+	// setup
+	envport := os.Getenv("PORT")
+	expectedPort := 1234
+	os.Setenv("PORT", strconv.Itoa(expectedPort))
+
+	// run tests
+	port, err := initPort()
+	assert.Equal(t, expectedPort, port)
+	assert.Nil(t, err)
+
+	// teardown
+	os.Setenv("PORT", envport)
+}
+
+func TestPort_Error(t *testing.T) {
+	// setup
+	envport := os.Getenv("PORT")
+	expectedPort := "test"
+	os.Setenv("PORT", expectedPort)
+
+	// run tests
+	port, err := initPort()
+	assert.Equal(t, 0, port)
+	assert.Error(t, err)
+
+	// teardown
+	os.Setenv("PORT", envport)
 }

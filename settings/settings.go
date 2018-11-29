@@ -37,6 +37,9 @@ var ErrDatabaseInfo = errors.New("$DATABASE_HOST, $DATABASE_PORT, $DATABASE_USER
 // ErrNodeID is thrown when an invalid node ID is submitted
 var ErrNodeID = errors.New("$NODE_ID must be an integer")
 
+// ErrPort is thrown when an invalid port is submitted
+var ErrPort = errors.New("$PORT must be an integer")
+
 // Database holds configuration information for the database connection
 type Database struct {
 	Host string
@@ -53,6 +56,7 @@ type Settings struct {
 	Database      *Database
 	DiscordToken  string
 	NodeID        int
+	Port          int
 }
 
 // Init returns a new settings object, and initializes that object from
@@ -61,7 +65,7 @@ func Init() (*Settings, error) {
 	// Initialize the Discord Token
 	discordToken, err := initDiscordToken()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to initialize discord token")
 	}
 
 	// Initialize the database
@@ -79,12 +83,19 @@ func Init() (*Settings, error) {
 	//	return nil, err
 	//}
 
+	// Initialize the web port
+	port, err := initPort()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to initialize port")
+	}
+
 	// Create the settings object
 	set := &Settings{
 		DiscordToken: discordToken,
 		//Database:      database,
 		CommandPrefix: commandPrefix,
 		//NodeID:        nodeID,
+		Port: port,
 	}
 
 	return set, nil
@@ -136,4 +147,18 @@ func initNodeID() (int, error) {
 		return 0, ErrNodeID
 	}
 	return id, nil
+}
+
+func initPort() (int, error) {
+	portstr := os.Getenv("PORT")
+	if portstr == "" {
+		return 3000, nil
+	}
+
+	port, err := strconv.Atoi(portstr)
+	if err != nil {
+		return 0, ErrPort
+	}
+
+	return port, nil
 }

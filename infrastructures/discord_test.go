@@ -25,36 +25,45 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/golang/mock/gomock"
 	"github.com/kkragenbrink/slate/infrastructures/mocks"
+	"github.com/kkragenbrink/slate/interfaces"
+	"github.com/kkragenbrink/slate/settings"
 	"github.com/kkragenbrink/slate/usecases"
 	"github.com/pkg/errors"
-	"testing"
-
-	"github.com/kkragenbrink/slate/settings"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"testing"
 )
 
-func TestNew(t *testing.T) {
-	cfg := new(settings.Settings)
-	cfg.DiscordToken = "test-token"
-	_, err := NewBot(cfg)
-	assert.Nil(t, err)
+type BotSuite struct {
+	suite.Suite
 }
 
-func TestAddHandler(t *testing.T) {
+func TestBotSuite(t *testing.T) {
+	suite.Run(t, new(BotSuite))
+}
+
+func (suite *BotSuite) TestNewBot() {
+	set := new(settings.Settings)
+	set.DiscordToken = "test-token"
+	_, err := NewBot(set)
+	assert.Nil(suite.T(), err)
+}
+
+func (suite *BotSuite) TestAddHandler() {
 	bot := new(Bot)
 
 	// positive flow
 	bot.AddHandler("test", genMockHandler("test"))
-	assert.Equal(t, 1, len(bot.handlers))
-	assert.True(t, bot.hasHandler("test"))
+	assert.Equal(suite.T(), 1, len(bot.handlers))
+	assert.True(suite.T(), bot.hasHandler("test"))
 
 	// negative flow
 	err := bot.AddHandler("test", genMockHandler("test"))
-	assert.Error(t, errDuplicateHandler, err)
+	assert.Error(suite.T(), errDuplicateHandler, err)
 }
 
-func TestHandleMessageCreate(t *testing.T) {
-	ctrl := gomock.NewController(t)
+func (suite *BotSuite) TestHandleMessageCreate() {
+	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	bot, _ := NewBot(&settings.Settings{CommandPrefix: "$"})
 	session := mocks.NewMockDiscordSession(ctrl)
@@ -72,8 +81,8 @@ func TestHandleMessageCreate(t *testing.T) {
 	bot.handleMessageCreate(session, message)
 }
 
-func TestStart(t *testing.T) {
-	ctrl := gomock.NewController(t)
+func (suite *BotSuite) TestStart() {
+	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	bot := new(Bot)
 	session := mocks.NewMockDiscordSession(ctrl)
@@ -83,19 +92,19 @@ func TestStart(t *testing.T) {
 	bot.Start()
 }
 
-func TestStartError(t *testing.T) {
-	ctrl := gomock.NewController(t)
+func (suite *BotSuite) TestStartError() {
+	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	bot := new(Bot)
 	session := mocks.NewMockDiscordSession(ctrl)
 	session.EXPECT().Open().Return(errSampleError)
 	bot.session = session
 	err := bot.Start()
-	assert.Error(t, errSampleError, err)
+	assert.Error(suite.T(), errSampleError, err)
 }
 
-func TestStop(t *testing.T) {
-	ctrl := gomock.NewController(t)
+func (suite *BotSuite) TestStop() {
+	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	bot := new(Bot)
 	session := mocks.NewMockDiscordSession(ctrl)
@@ -105,24 +114,24 @@ func TestStop(t *testing.T) {
 	bot.Stop()
 }
 
-func TestStopError(t *testing.T) {
-	ctrl := gomock.NewController(t)
+func (suite *BotSuite) TestStopError() {
+	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	bot := new(Bot)
 	session := mocks.NewMockDiscordSession(ctrl)
 	session.EXPECT().Close().Return(errSampleError)
 	bot.session = session
 	err := bot.Stop()
-	assert.Error(t, errSampleError, err)
+	assert.Error(suite.T(), errSampleError, err)
 }
 
 func genMockChannel(channel, guild string) *discordgo.Channel {
 	return &discordgo.Channel{ID: channel, GuildID: guild}
 }
 
-func genMockHandler(response string) MessageHandlerFunc {
-	return func(ctx context.Context, u *usecases.User, c *usecases.Channel, s []string) (string, error) {
-		return response, nil
+func genMockHandler(response string) interfaces.BotHandler {
+	return func(ctx context.Context, u *usecases.User, c *usecases.Channel, s []string) string {
+		return response
 	}
 }
 
