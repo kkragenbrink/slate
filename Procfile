@@ -1,1 +1,1 @@
-bot: slate
+web: slate
