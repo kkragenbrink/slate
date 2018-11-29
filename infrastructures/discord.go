@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/kkragenbrink/slate/interfaces"
 	"github.com/kkragenbrink/slate/settings"
 	"github.com/kkragenbrink/slate/usecases"
 	"github.com/pkg/errors"
@@ -55,11 +56,8 @@ type Bot struct {
 // A MessageHandler is a command name and a handler function
 type MessageHandler struct {
 	command string
-	handle  MessageHandlerFunc
+	handle  interfaces.BotHandler
 }
-
-// A MessageHandlerFunc is a context-aware response to a message from Discord.
-type MessageHandlerFunc func(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) (string, error)
 
 // NewBot returns a new Discord Bot, which will be used by the application for
 // communicating with discord.
@@ -80,7 +78,7 @@ func NewBot(set *settings.Settings) (*Bot, error) {
 }
 
 // AddHandler adds a new MessageHandler to the bot.
-func (bot *Bot) AddHandler(command string, handle MessageHandlerFunc) error {
+func (bot *Bot) AddHandler(command string, handle interfaces.BotHandler) error {
 	if bot.hasHandler(command) {
 		return errDuplicateHandler
 	}
@@ -143,12 +141,7 @@ func (bot *Bot) handleMessageCreate(session DiscordSession, msg *discordgo.Messa
 			user := usecases.NewUser(msg.Author.ID, msg.Author.Username)
 
 			// handle it
-			response, err := handler.handle(ctx, user, channel, fields)
-			if err != nil {
-				// todo: log error
-				bot.session.ChannelMessageSend(msg.ChannelID, err.Error())
-				return
-			}
+			response := handler.handle(ctx, user, channel, fields)
 			bot.session.ChannelMessageSend(msg.ChannelID, response)
 
 			return

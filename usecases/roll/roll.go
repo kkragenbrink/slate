@@ -23,13 +23,12 @@ package roll
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flag"
-	"github.com/kkragenbrink/slate/infrastructures"
-	"github.com/kkragenbrink/slate/usecases"
+	"github.com/pkg/errors"
 )
 
-var errInvalidRollSystem = errors.New("choose a roll system (one of: cofd, d20, fate)")
+// ErrInvalidRollSystem is thrown when an invalid roll system is selected
+var ErrInvalidRollSystem = errors.New("roll system must be one of: cofd, d20, fate")
 
 const (
 	cofd int = iota
@@ -43,38 +42,24 @@ type System interface {
 	Roll(context.Context, []string) error
 	SetRand(roller)
 	ToString() string
-	ToJSON() json.RawMessage
 }
 
 type roller func(times, min, max int) []int
 
-// Roll determines which System to use, parses flags for that system, then hands off processing.
-func Roll(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) (System, error) {
-	fs := &flag.FlagSet{}
-	fs.Usage = func() {}
-	var system string
-	fs.StringVar(&system, "system", "cofd", "the dice system to use")
-	fs.Parse(fields)
-
-	cfs := &flag.FlagSet{}
-	rs := NewRoller(system)
-	if rs == nil {
-		return nil, errInvalidRollSystem
-	}
-	rs.SetRand(infrastructures.MathRand)
-	rs.Flags(cfs)
-	cfs.Parse(fields)
-	rs.Roll(ctx, cfs.Args())
-
-	return rs, nil
-}
-
 // NewRoller creates a new System for the appropriate system.
-func NewRoller(system string) System {
+func NewRoller(system string, body json.RawMessage) (System, error) {
 	switch system {
 	case "cofd":
-		return &CofDRollSystem{}
+		system := &CofDRollSystem{}
+		if body != nil {
+			err := json.Unmarshal(body, &system)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not decode json")
+			}
+		}
+		system.SetRand(MathRand)
+		return system, nil
 	}
 
-	return nil
+	return nil, ErrInvalidRollSystem
 }

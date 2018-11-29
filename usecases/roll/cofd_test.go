@@ -33,9 +33,9 @@ func TestRoll(t *testing.T) {
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(t, err)
-	assert.Equal(t, exs, o.results.successes)
-	assert.Equal(t, exr, o.results.rolls)
-	assert.Equal(t, exrr, o.results.rerolls)
+	assert.Equal(t, exs, o.Results.Successes)
+	assert.Equal(t, exr, o.Results.Rolls)
+	assert.Equal(t, exrr, o.Results.Rerolls)
 }
 
 func TestRollAgain(t *testing.T) {
@@ -45,9 +45,9 @@ func TestRollAgain(t *testing.T) {
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(t, err)
-	assert.Equal(t, exs, o.results.successes)
-	assert.Equal(t, exr, o.results.rolls)
-	assert.Equal(t, exrr, o.results.rerolls)
+	assert.Equal(t, exs, o.Results.Successes)
+	assert.Equal(t, exr, o.Results.Rolls)
+	assert.Equal(t, exrr, o.Results.Rerolls)
 }
 
 func TestRollRote(t *testing.T) {
@@ -57,9 +57,9 @@ func TestRollRote(t *testing.T) {
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, true, false)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(t, err)
-	assert.Equal(t, exs, o.results.successes)
-	assert.Equal(t, exr, o.results.rolls)
-	assert.Equal(t, exrr, o.results.rerolls)
+	assert.Equal(t, exs, o.Results.Successes)
+	assert.Equal(t, exr, o.Results.Rolls)
+	assert.Equal(t, exrr, o.Results.Rerolls)
 }
 
 func TestRollWeak(t *testing.T) {
@@ -69,9 +69,9 @@ func TestRollWeak(t *testing.T) {
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, true)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(t, err)
-	assert.Equal(t, exs, o.results.successes)
-	assert.Equal(t, exr, o.results.rolls)
-	assert.Equal(t, exrr, o.results.rerolls)
+	assert.Equal(t, exs, o.Results.Successes)
+	assert.Equal(t, exr, o.Results.Rolls)
+	assert.Equal(t, exrr, o.Results.Rerolls)
 }
 
 func TestRollChance(t *testing.T) {
@@ -81,20 +81,20 @@ func TestRollChance(t *testing.T) {
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{})
 	assert.Nil(t, err)
-	assert.Equal(t, exs, o.results.successes)
-	assert.Equal(t, exr, o.results.rolls)
-	assert.Equal(t, exrr, o.results.rerolls)
+	assert.Equal(t, exs, o.Results.Successes)
+	assert.Equal(t, exr, o.Results.Rolls)
+	assert.Equal(t, exrr, o.Results.Rerolls)
 }
 
 func TestToString(t *testing.T) {
 	o := genMockCofDRollSystem(mockRoller([]int{}, []int{}), 9, 4, true, true)
-	o.dice = 4
-	o.verbose = true
-	o.results.successes = 4
-	o.results.rolls = []int{8, 8, 9, 7}
-	o.results.rerolls = []int{8, 4}
+	o.Dice = 4
+	o.Verbose = true
+	o.Results.Successes = 4
+	o.Results.Rolls = []int{8, 8, 9, 7}
+	o.Results.Rerolls = []int{8, 4}
 	str := o.ToString()
-	ex := "rolled 4 CofD dice (with 9-again, rote, weakness) for 4 successes. Exceptional success! rolls: [8 8 9 7] rerolls: [8 4]"
+	ex := "rolled 4 CofD Dice (with 9-Again, Rote, Weakness) for 4 Successes. Exceptional success! Rolls: [8 8 9 7] Rerolls: [8 4]"
 	assert.Equal(t, ex, str)
 }
 
@@ -110,10 +110,10 @@ func mockRoller(r []int, rr []int) roller {
 
 func genMockCofDRollSystem(r roller, again, exceptional int, rote, weak bool) *CofDRollSystem {
 	return &CofDRollSystem{
-		again:       again,
+		Again:       again,
 		rand:        r,
-		rote:        rote,
-		weakness:    weak,
-		exceptional: exceptional,
+		Rote:        rote,
+		Weakness:    weak,
+		Exceptional: exceptional,
 	}
 }

@@ -18,19 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package infrastructures
+package interfaces
 
-import (
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
-
-func TestMathRand(t *testing.T) {
-	var got []int
-	got = MathRand(1, 1, 1)
-	assert.Equal(t, []int{1}, got)
-	got = MathRand(3, 1, 1)
-	assert.Equal(t, []int{1, 1, 1}, got)
-	got = MathRand(1, 1, 10)
-	assert.True(t, 1 <= got[0] && got[0] <= 10)
+// Init adds all message handlers to various services
+func Init(bot Bot, router Router) {
+	initBotServices(bot)
+	initWebServices(router)
 }
