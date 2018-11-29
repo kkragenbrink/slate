@@ -18,16 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package infrastructures
+package services
 
 import (
 	"context"
 	"github.com/bwmarrin/discordgo"
 	"github.com/golang/mock/gomock"
-	"github.com/kkragenbrink/slate/infrastructures/mocks"
 	"github.com/kkragenbrink/slate/interfaces"
+	"github.com/kkragenbrink/slate/services/mocks"
 	"github.com/kkragenbrink/slate/settings"
-	"github.com/kkragenbrink/slate/usecases"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -69,14 +68,11 @@ func (suite *BotSuite) TestHandleMessageCreate() {
 	session := mocks.NewMockDiscordSession(ctrl)
 	author := "a1"
 	channel := "c1"
-	guild := "g1"
 	msg := "$test"
 	message := genMockMessage(author, channel, msg)
 	handler := genMockHandler("test")
-	mockChannel := genMockChannel(channel, guild)
 	bot.AddHandler("test", handler)
-	session.EXPECT().Channel(gomock.Eq(channel)).Return(mockChannel, nil)
-	session.EXPECT().ChannelMessageSend(gomock.Eq(channel), gomock.Eq("test"))
+	session.EXPECT().ChannelMessageSend(gomock.Eq(channel), gomock.Eq("<@a1> test"))
 	bot.session = session
 	bot.handleMessageCreate(session, message)
 }
@@ -125,13 +121,9 @@ func (suite *BotSuite) TestStopError() {
 	assert.Error(suite.T(), errSampleError, err)
 }
 
-func genMockChannel(channel, guild string) *discordgo.Channel {
-	return &discordgo.Channel{ID: channel, GuildID: guild}
-}
-
 func genMockHandler(response string) interfaces.BotHandler {
-	return func(ctx context.Context, u *usecases.User, c *usecases.Channel, s []string) string {
-		return response
+	return func(ctx context.Context, msg *discordgo.MessageCreate, s []string) (string, error) {
+		return response, nil
 	}
 }
 
