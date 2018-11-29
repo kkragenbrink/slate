@@ -18,19 +18,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package infrastructures
+package interfaces
 
 import (
-	"math/rand"
+	"context"
+	"encoding/json"
+	"github.com/kkragenbrink/slate/usecases/roll"
 )
 
-// MathRand generates a random number between 1 and the number of sides for each
-// die using the math/rand package
-func MathRand(times, min, max int) []int {
-	var results []int
-	for i := 0; i < times; i++ {
-		roll := rand.Intn(max) + min
-		results = append(results, roll)
+// A Router contains methods for adding methods to handle http requests
+type Router interface {
+	HandlePost(string, WebHandler)
+}
+
+// A WebHandler is an http request handler
+type WebHandler func(ctx context.Context, body json.RawMessage) (interface{}, error)
+
+// A WebRoll is a roll command, and is used to determine the system
+type WebRoll struct {
+	System string `json:"system"`
+}
+
+// WebRollHandler handles incoming roll messages and sends them to the roll usecase.
+func WebRollHandler(ctx context.Context, body json.RawMessage) (interface{}, error) {
+	var r WebRoll
+	err := json.Unmarshal(body, &r)
+	rs, err := roll.NewRoller(r.System, body)
+	if err != nil {
+		// todo: log
+		return 400, roll.ErrInvalidRollSystem
 	}
-	return results
+	err = rs.Roll(ctx, nil)
+	if err != nil {
+		return 500, err
+	}
+	return rs, nil
+}
+
+func initWebServices(router Router) {
+	router.HandlePost("/roll", WebRollHandler)
 }

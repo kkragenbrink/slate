@@ -23,7 +23,6 @@ package roll
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/kkragenbrink/slate/util"
@@ -34,26 +33,26 @@ import (
 // The CofDRollSystem is the d10 system used in Chronicles of Darkness
 type CofDRollSystem struct {
 	rand        roller
-	verbose     bool
-	again       int
-	exceptional int
-	rote        bool
-	weakness    bool
-	dice        int
-	results     struct {
-		successes int
-		rolls     []int
-		rerolls   []int
-	}
+	Verbose     bool `json:"verbose"`
+	Again       int  `json:"again"`
+	Exceptional int  `json:"exceptional"`
+	Rote        bool `json:"rote"`
+	Weakness    bool `json:"weakness"`
+	Dice        int  `json:"dice"`
+	Results     struct {
+		Successes int   `json:"Successes"`
+		Rolls     []int `json:"Rolls"`
+		Rerolls   []int `json:"Rerolls"`
+	} `json:"Results"`
 }
 
 // Flags sets up the flag rules for the system
 func (rs *CofDRollSystem) Flags(fs *flag.FlagSet) {
-	fs.BoolVar(&rs.verbose, "verbose", false, "Whether to use a verbose output.")
-	fs.IntVar(&rs.again, "again", 10, "The n-again of the rs.")
-	fs.IntVar(&rs.exceptional, "exceptional", 5, "The number of successes needed for exceptional success.")
-	fs.BoolVar(&rs.rote, "rote", false, "Whether the role is a rote action.")
-	fs.BoolVar(&rs.weakness, "weakness", false, "Whether the rs is made with weakness.")
+	fs.BoolVar(&rs.Verbose, "Verbose", false, "Whether to use a Verbose output.")
+	fs.IntVar(&rs.Again, "Again", 10, "The n-Again of the rs.")
+	fs.IntVar(&rs.Exceptional, "Exceptional", 5, "The number of Successes needed for Exceptional success.")
+	fs.BoolVar(&rs.Rote, "Rote", false, "Whether the role is a Rote action.")
+	fs.BoolVar(&rs.Weakness, "Weakness", false, "Whether the rs is made with Weakness.")
 }
 
 // SetRand assigns a random number generator to the system
@@ -64,18 +63,19 @@ func (rs *CofDRollSystem) SetRand(rand roller) {
 // Roll runs the rollsystem for a given set of []tokens.
 // This function should only be run once per object.
 func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
-	var err error
-	rs.dice, err = parseArgs(tokens)
-
-	if err != nil {
-		// todo: wrap probably
-		return err
+	if tokens != nil {
+		var err error
+		rs.Dice, err = parseArgs(tokens)
+		if err != nil {
+			// todo: wrap probably
+			return err
+		}
 	}
 
-	successes, rolls, rerolls := rs.doRoll(rs.dice, rs.rote, rs.weakness)
-	rs.results.successes = successes
-	rs.results.rolls = rolls
-	rs.results.rerolls = rerolls
+	successes, rolls, rerolls := rs.doRoll(rs.Dice, rs.Rote, rs.Weakness)
+	rs.Results.Successes = successes
+	rs.Results.Rolls = rolls
+	rs.Results.Rerolls = rerolls
 
 	return nil
 }
@@ -86,7 +86,7 @@ func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, roll
 
 	rolls = rs.rand(rollsToMake, 1, 10)
 
-	// parse the rolls
+	// parse the Rolls
 	for _, roll := range rolls {
 		if dice == 0 {
 			if roll == 10 {
@@ -106,17 +106,17 @@ func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, roll
 		}
 
 		// reroll?
-		if roll >= rs.again {
+		if roll >= rs.Again {
 			rerollsNeeded++
 		}
 
-		// weakness?
+		// Weakness?
 		if weak && roll == 1 {
 			successes--
 		}
 	}
 
-	// Anything over or equal to the "again" threshhold needs rerolling. Easiest
+	// Anything over or equal to the "Again" threshhold needs rerolling. Easiest
 	// way to do that is just to send it back through.
 	if rerollsNeeded > 0 {
 		rerollSuccesses, rerollRolls, rerollRerolls := rs.doRoll(rerollsNeeded, false, false)
@@ -128,55 +128,49 @@ func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, roll
 	return util.Max(successes, 0), rolls, rerolls
 }
 
-// ToJSON converts the results to a JSON object.
-// todo: implement toJSON and toString
-func (rs *CofDRollSystem) ToJSON() json.RawMessage {
-	return nil
-}
-
-// ToString converts the results to a string.
+// ToString converts the Results to a string.
 func (rs *CofDRollSystem) ToString() string {
 	var buff bytes.Buffer
 	var flags []string
 
-	buff.WriteString(fmt.Sprintf("rolled %d CofD dice", rs.dice))
+	buff.WriteString(fmt.Sprintf("rolled %d CofD Dice", rs.Dice))
 
 	// chance die?
-	if rs.dice == 0 {
+	if rs.Dice == 0 {
 		buff.WriteString(fmt.Sprintf(" (Chance Die)"))
 	}
 
 	// add roll modifying flags
-	if rs.again != 10 {
-		flags = append(flags, fmt.Sprintf("%d-again", rs.again))
+	if rs.Again != 10 {
+		flags = append(flags, fmt.Sprintf("%d-Again", rs.Again))
 	}
-	if rs.rote {
-		flags = append(flags, "rote")
+	if rs.Rote {
+		flags = append(flags, "Rote")
 	}
-	if rs.weakness {
-		flags = append(flags, "weakness")
+	if rs.Weakness {
+		flags = append(flags, "Weakness")
 	}
 	if len(flags) > 0 {
 		buff.WriteString(fmt.Sprintf(" (with %s)", strings.Join(flags, ", ")))
 	}
 
-	// add successes
-	buff.WriteString(fmt.Sprintf(" for %d successes.", rs.results.successes))
+	// add Successes
+	buff.WriteString(fmt.Sprintf(" for %d Successes.", rs.Results.Successes))
 
-	if rs.results.successes >= rs.exceptional {
+	if rs.Results.Successes >= rs.Exceptional {
 		buff.WriteString(" Exceptional success!")
 	}
 
-	if rs.dice == 0 && rs.results.rolls[0] == 1 {
+	if rs.Dice == 0 && rs.Results.Rolls[0] == 1 {
 		buff.WriteString(" Critical failure!")
 	}
 
-	// add rolls and rerolls if desired
-	if rs.verbose {
-		buff.WriteString(fmt.Sprintf(" rolls: %d", rs.results.rolls))
+	// add Rolls and Rerolls if desired
+	if rs.Verbose {
+		buff.WriteString(fmt.Sprintf(" Rolls: %d", rs.Results.Rolls))
 
-		if len(rs.results.rerolls) > 0 {
-			buff.WriteString(fmt.Sprintf(" rerolls: %d", rs.results.rerolls))
+		if len(rs.Results.Rerolls) > 0 {
+			buff.WriteString(fmt.Sprintf(" Rerolls: %d", rs.Results.Rerolls))
 		}
 	}
 

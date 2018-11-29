@@ -22,23 +22,44 @@ package interfaces
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"github.com/kkragenbrink/slate/infrastructures"
 	"github.com/kkragenbrink/slate/usecases"
 	"github.com/kkragenbrink/slate/usecases/roll"
 )
 
-// RollHandler handles incoming roll messages and sends them to the roll usecase.
-func RollHandler(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) (string, error) {
-	roller, err := roll.Roll(ctx, user, channel, fields)
-	if err != nil {
-		// todo: Wrap probably
-		return "", err
-	}
-	return fmt.Sprintf("<@%s> %s", user.ID, roller.ToString()), nil
+// A Bot is a repository for discord command handlers
+type Bot interface {
+	AddHandler(string, BotHandler) error
 }
 
-// Init adds all message handlers to the bot.
-func Init(bot *infrastructures.Bot) {
-	bot.AddHandler("roll", RollHandler)
+// A BotHandler is a handler for a specific discord command
+type BotHandler func(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) string
+
+// BotRollHandler handles incoming roll messages and sends them to the roll usecase.
+func BotRollHandler(ctx context.Context, user *usecases.User, channel *usecases.Channel, fields []string) string {
+	fs := &flag.FlagSet{}
+	fs.Usage = func() {}
+	var system string
+	fs.StringVar(&system, "system", "cofd", "the dice system to use")
+	fs.Parse(fields)
+
+	cfs := &flag.FlagSet{}
+	rs, err := roll.NewRoller(system, nil)
+	if err != nil {
+		// todo: log
+		return fmt.Sprintf("<@%s> %s", user.ID, err.Error())
+	}
+	rs.Flags(cfs)
+	cfs.Parse(fields)
+	err = rs.Roll(ctx, cfs.Args())
+	if err != nil {
+		// todo: log
+		return fmt.Sprintf("<@%s> %s", user.ID, err.Error())
+	}
+	return fmt.Sprintf("<@%s> %s", user.ID, rs.ToString())
+}
+
+func initBotServices(bot Bot) {
+	bot.AddHandler("roll", BotRollHandler)
 }

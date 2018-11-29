@@ -38,25 +38,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Establish as a Discord Bot
+	// Create Services
 	bot, err := infrastructures.NewBot(set)
 	if err != nil {
 		fmt.Print(err)
 		os.Exit(1)
 	}
+	ws := infrastructures.NewWebService(set)
 
-	// Initialize Discord interfaces
-	interfaces.Init(bot)
+	// Initialize Services
+	interfaces.Init(bot, ws)
 
-	// Start the bot
+	// Start Services
 	err = bot.Start()
 	if err != nil {
 		fmt.Print(err)
 		os.Exit(1)
 	}
-
-	// Wait for signals
-	waitForSignals()
+	err = ws.Start()
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
 
 	// Shutdown our Discord Bot
 	err = bot.Stop()
