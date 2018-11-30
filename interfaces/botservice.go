@@ -23,22 +23,68 @@ package interfaces
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/kkragenbrink/slate/domains"
+	"github.com/kkragenbrink/slate/interfaces/repositories"
 	"github.com/kkragenbrink/slate/usecases/roll"
+	"github.com/kkragenbrink/slate/usecases/sheet"
 	"github.com/pkg/errors"
+	"strconv"
+	"strings"
 )
+
+// SiteURL is the URL of the website which serves static content
+// todo: this should be a configuration parameter
+const SiteURL = "https://slate.sosly.org"
 
 // The BotServiceHandler stores information useful to the bot service message handlers
 type BotServiceHandler struct {
+	bot Bot
+	db  repositories.Database
+}
+
+// NewBotServiceHandler creates a new BotServiceHandler instance
+func NewBotServiceHandler(bot Bot, db repositories.Database) *BotServiceHandler {
+	bsh := new(BotServiceHandler)
+	bsh.bot = bot
+	bsh.db = db
+	return bsh
 }
 
 // A Bot is a repository for discord command handlers
 type Bot interface {
 	AddHandler(string, BotHandler) error
+	Channel(string) (*discordgo.Channel, error)
+	User(string) (*discordgo.User, error)
 }
 
 // A BotHandler is a message handler for discord messages
 type BotHandler func(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error)
+
+// Sheet creates a new character sheet
+func (bs *BotServiceHandler) Sheet(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error) {
+	// determine the sheet system
+	fs := &flag.FlagSet{}
+	fs.Usage = func() {}
+	var system string
+	fs.StringVar(&system, "system", "wtf2e", "the character system to use")
+	fs.Parse(fields)
+	name := strings.Join(fs.Args(), " ")
+	player, _ := strconv.ParseInt(msg.Author.ID, 10, 64)
+	ch, err := bs.bot.Channel(msg.ChannelID)
+	if err != nil {
+		// todo
+		return "", err
+	}
+	guild, _ := strconv.ParseInt(ch.GuildID, 10, 64)
+	repo := bs.db.Repository("character").(domains.CharacterRepository)
+	character, err := sheet.New(ctx, repo, name, system, guild, player)
+	if err != nil {
+		return "", errors.Wrap(err, "could not create a new sheet")
+	}
+	return fmt.Sprintf("your new character is at %s/sheets/%s", SiteURL, character.ID), nil
+}
 
 // Roll handles incoming roll messages and sends them to the roll usecase.
 func (bs *BotServiceHandler) Roll(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error) {

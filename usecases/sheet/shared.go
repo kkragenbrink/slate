@@ -18,59 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package sheet
 
-import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
-)
-
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, bot, db)
-
-	// Start Services
-	err = db.Start()
-	handleError(err, 1)
-	err = bot.Start()
-	handleError(err, 1)
-	err = ws.Start()
-	handleError(err, 1)
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown services
-	err = ws.Stop()
-	handleError(err, 2)
-	err = bot.Stop()
-	handleError(err, 2)
-	err = db.Stop()
-	handleError(err, 2)
+// IntWithMax describes an integer which has a "Current" and a "Max" value
+type IntWithMax struct {
+	Current int `json:"current"`
+	Max     int `json:"max"`
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
-}
-
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+// A Note is a generic storage option for notes across various sheet types
+type Note struct {
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	Collapsed bool   `json:"collapsed"`
+	Edit      bool   `json:"edit"`
 }

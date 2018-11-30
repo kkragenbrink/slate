@@ -35,16 +35,19 @@ import (
 
 type BotSuite struct {
 	suite.Suite
+	mockdb *DatabaseService
 }
 
 func TestBotSuite(t *testing.T) {
-	suite.Run(t, new(BotSuite))
+	s := new(BotSuite)
+	s.mockdb = new(DatabaseService)
+	suite.Run(t, s)
 }
 
 func (suite *BotSuite) TestNewBot() {
 	set := new(settings.Settings)
 	set.DiscordToken = "test-token"
-	_, err := NewBot(set)
+	_, err := NewBot(set, suite.mockdb)
 	assert.Nil(suite.T(), err)
 }
 
@@ -64,7 +67,7 @@ func (suite *BotSuite) TestAddHandler() {
 func (suite *BotSuite) TestHandleMessageCreate() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
-	bot, _ := NewBot(&settings.Settings{CommandPrefix: "$"})
+	bot, _ := NewBot(&settings.Settings{CommandPrefix: "$"}, suite.mockdb)
 	session := mocks.NewMockDiscordSession(ctrl)
 	author := "a1"
 	channel := "c1"

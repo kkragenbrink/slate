@@ -18,59 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package domains
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"context"
+	"github.com/bwmarrin/snowflake"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, bot, db)
-
-	// Start Services
-	err = db.Start()
-	handleError(err, 1)
-	err = bot.Start()
-	handleError(err, 1)
-	err = ws.Start()
-	handleError(err, 1)
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown services
-	err = ws.Stop()
-	handleError(err, 2)
-	err = bot.Stop()
-	handleError(err, 2)
-	err = db.Stop()
-	handleError(err, 2)
+// A Character represents a character owned by a player
+type Character struct {
+	ID         *snowflake.ID `json:"id"`
+	Name       string        `json:"name"`
+	Guild      int64         `json:"guild"`
+	Player     int64         `json:"player"`
+	PlayerName string        `json:"playerName"`
+	System     string        `json:"system"`
+	Sheet      Sheet         `json:"sheet"`
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
+// The CharacterRepository describes the interface to find and store characters.
+type CharacterRepository interface {
+	FindByID(ctx context.Context, id int64) (*Character, error)
+	Store(ctx context.Context, c *Character) error
 }
 
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+// A Sheet is a type of character sheet.
+type Sheet interface {
+	System() string
 }
