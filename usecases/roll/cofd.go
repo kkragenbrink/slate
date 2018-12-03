@@ -65,6 +65,7 @@ func (rs *CofDRollSystem) SetRand(rand roller) {
 func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
 	if tokens != nil {
 		var err error
+
 		rs.Dice, err = parseArgs(tokens)
 		if err != nil {
 			// todo: wrap probably
@@ -181,11 +182,25 @@ func (rs *CofDRollSystem) ToString() string {
 func parseArgs(args []string) (int, error) {
 	tokens := []int{0}
 
+	// rejoin all the args so that we can split properly
+	argsa := strings.Join(args, "+")
+
+	// ensure negatives are their own tokens
+	argsa = strings.Replace(argsa, "-", "+-+", -1)
+
+	// split on the addition
+	args = strings.Split(argsa, "+")
+
 	// reverse the token order so that we can handle subtraction as addition
 	gra := util.ReverseStringSlice(args)
 
 	// range over the tokens
 	for _, arg := range gra {
+		// ignore any empty strings
+		if arg == "" {
+			continue
+		}
+
 		num, err := strconv.Atoi(arg)
 
 		if err != nil {

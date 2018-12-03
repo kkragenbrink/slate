@@ -88,11 +88,20 @@ func (suite *CofDTestSuite) TestRollChance() {
 	exr := []int{10}
 	exrr := []int(nil)
 	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
-	err := o.Roll(context.Background(), []string{})
+	var d []string
+	err := o.Roll(context.Background(), d)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exs, o.Results.Successes)
 	assert.Equal(suite.T(), exr, o.Results.Rolls)
 	assert.Equal(suite.T(), exrr, o.Results.Rerolls)
+}
+
+func (suite *CofDTestSuite) TestParseArgs() {
+	str := []string{"1+1", "-1", "3-3"}
+	exp := 1
+	o, err := parseArgs(str)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), exp, o)
 }
 
 func (suite *CofDTestSuite) TestToString() {
