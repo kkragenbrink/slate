@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/kkragenbrink/slate/interfaces"
 	"github.com/kkragenbrink/slate/settings"
 	"net/http"
@@ -39,22 +40,28 @@ type WebService struct {
 }
 
 // NewWebService creates a new instance of the WebService manager
-func NewWebService(set *settings.Settings) *WebService {
+func NewWebService(set *settings.Settings, bot *Bot, db *DatabaseService) *WebService {
 	ws := new(WebService)
 	ws.router = initRouter()
 	ws.server = initServer(set, ws.router)
-	ws.handler = initHandler(ws.router)
+	ws.handler = initHandler(ws.router, bot, db)
 	return ws
 }
 
-func initHandler(router chi.Router) *interfaces.WebServiceHandler {
-	handler := new(interfaces.WebServiceHandler)
+func initHandler(router chi.Router, bot *Bot, db *DatabaseService) *interfaces.WebServiceHandler {
+	handler := interfaces.NewWebServiceHandler(bot, db)
 	router.Post("/roll", handler.Roll)
+	router.Get("/sheets/{ID}", handler.Sheet)
+	router.Post("/sheets/{ID}", handler.Sheet)
 	return handler
 }
 
 func initRouter() chi.Router {
 	router := chi.NewRouter()
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+	})
+	router.Use(c.Handler)
 	router.Use(middleware.Logger)
 	return router
 }

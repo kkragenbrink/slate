@@ -18,59 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package util
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"bytes"
+	"github.com/bmizerany/assert"
+	"testing"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, bot, db)
-
-	// Start Services
-	err = db.Start()
-	handleError(err, 1)
-	err = bot.Start()
-	handleError(err, 1)
-	err = ws.Start()
-	handleError(err, 1)
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown services
-	err = ws.Stop()
-	handleError(err, 2)
-	err = bot.Stop()
-	handleError(err, 2)
-	err = db.Stop()
-	handleError(err, 2)
-}
-
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
-}
-
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+func TestCW(t *testing.T) {
+	ot := isTTY
+	isTTY = true // fake it for tests
+	var buf bytes.Buffer
+	var exp bytes.Buffer
+	exp.Write(BWhite)
+	exp.Write([]byte("Test"))
+	exp.Write(reset)
+	CW(&buf, true, BWhite, "Test")
+	assert.Equal(t, exp, buf)
+	isTTY = ot // reset
 }

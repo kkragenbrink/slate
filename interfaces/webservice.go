@@ -22,14 +22,30 @@ package interfaces
 
 import (
 	"encoding/json"
+	"github.com/bwmarrin/snowflake"
+	"github.com/go-chi/chi"
+	"github.com/kkragenbrink/slate/domains"
+	"github.com/kkragenbrink/slate/interfaces/repositories"
 	"github.com/kkragenbrink/slate/usecases/roll"
+	"github.com/kkragenbrink/slate/usecases/sheet"
 	"github.com/kkragenbrink/slate/util"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 // The WebServiceHandler stores information useful to the web service routes
 type WebServiceHandler struct {
-	Bot Bot
+	bot Bot
+	db  repositories.Database
+}
+
+// NewWebServiceHandler creates a new WebServiceHandler instance
+func NewWebServiceHandler(bot Bot, db repositories.Database) *WebServiceHandler {
+	ws := new(WebServiceHandler)
+	ws.bot = bot
+	ws.db = db
+	return ws
 }
 
 // A Roll is a roll command, and is used to determine the system
@@ -67,6 +83,59 @@ func (ws *WebServiceHandler) Roll(res http.ResponseWriter, req *http.Request) {
 	}
 	// encode the results
 	err = json.NewEncoder(res).Encode(rs)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// A WebCharacter allows easy inspection of a character before unmarshalling the sheet.
+type WebCharacter struct {
+	Name  string          `json:"name"`
+	Sheet json.RawMessage `json:"sheet"`
+}
+
+// Sheet handles the sheet usecase from the web.
+func (ws *WebServiceHandler) Sheet(res http.ResponseWriter, req *http.Request) {
+	rawid := chi.URLParam(req, "ID")
+	parsed, err := strconv.ParseInt(rawid, 10, 64)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+	}
+	id := snowflake.ID(parsed)
+	repo := ws.db.Repository("character").(domains.CharacterRepository)
+	char, err := sheet.Get(req.Context(), repo, id)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+	if req.Method == http.MethodPost {
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+		req.Body.Close()
+		var tmp WebCharacter
+		err = json.Unmarshal(body, &tmp)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+		char.Name = tmp.Name
+		sh := sheet.GenerateSheetBySystem(char.System, tmp.Sheet)
+		char.Sheet = sh
+		err = repo.Store(req.Context(), char)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+	}
+	if req.Method == http.MethodGet {
+		user, err := ws.bot.User(strconv.FormatInt(char.Player, 10))
+		if err != nil {
+			// todo: log it
+			char.PlayerName = err.Error()
+		} else {
+			char.PlayerName = user.String()
+		}
+	}
+	err = json.NewEncoder(res).Encode(char)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}

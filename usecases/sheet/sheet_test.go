@@ -18,59 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package sheet
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
-	"os/signal"
-	"syscall"
+	"context"
+	"github.com/bmizerany/assert"
+	"github.com/golang/mock/gomock"
+	"github.com/kkragenbrink/slate/domains"
+	"github.com/stretchr/testify/suite"
+	"testing"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, bot, db)
-
-	// Start Services
-	err = db.Start()
-	handleError(err, 1)
-	err = bot.Start()
-	handleError(err, 1)
-	err = ws.Start()
-	handleError(err, 1)
-
-	// Wait for signals
-	waitForSignals()
-
-	// Shutdown services
-	err = ws.Stop()
-	handleError(err, 2)
-	err = bot.Stop()
-	handleError(err, 2)
-	err = db.Stop()
-	handleError(err, 2)
+type SheetSuite struct {
+	suite.Suite
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
+func TestSheet(t *testing.T) {
+	suite.Run(t, new(SheetSuite))
 }
 
-func waitForSignals() {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+func (suite *SheetSuite) TestNew() {
+	ctrl, ctx := gomock.WithContext(context.Background(), suite.T())
+	db := domains.NewMockCharacterRepository(ctrl)
+	db.EXPECT().Store(ctx, gomock.Any()).Return(nil)
+	ch, err := New(ctx, db, "Test", "wtf2e", int64(1234), int64(1234))
+	assert.Equal(suite.T(), nil, err)
+	assert.Equal(suite.T(), "wtf2e", ch.Sheet.System())
+}
+
+func (suite *SheetSuite) TestGenerateSheetBySystem() {
+	sh := GenerateSheetBySystem("wtf2e", nil)
+	assert.Equal(suite.T(), "wtf2e", sh.System())
 }
