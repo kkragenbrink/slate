@@ -42,6 +42,7 @@ type DiscordSession interface {
 	Close() error
 	Guild(string) (*discordgo.Guild, error)
 	Open() error
+	User(string) (*discordgo.User, error)
 }
 
 // The Bot contains the connection to discord as well as the message handlers.
@@ -60,9 +61,9 @@ type BotMessageHandler struct {
 	handle  interfaces.BotHandler
 }
 
-// NewBot returns a new Discord Bot, which will be used by the application for
+// NewBot returns a new Discord bot, which will be used by the application for
 // communicating with discord.
-func NewBot(set *settings.Settings) (*Bot, error) {
+func NewBot(set *settings.Settings, db *DatabaseService) (*Bot, error) {
 	connstr := fmt.Sprintf("Bot %s", set.DiscordToken)
 
 	session, err := discordgo.New(connstr)
@@ -72,7 +73,7 @@ func NewBot(set *settings.Settings) (*Bot, error) {
 
 	bot := new(Bot)
 	bot.logger = NewSlateLogger()
-	bot.initServiceHandler()
+	bot.initServiceHandler(db)
 	bot.settings = set
 	bot.session = session
 	bot.mutex = &sync.Mutex{}
@@ -80,8 +81,9 @@ func NewBot(set *settings.Settings) (*Bot, error) {
 	return bot, nil
 }
 
-func (bot *Bot) initServiceHandler() {
-	bs := new(interfaces.BotServiceHandler)
+func (bot *Bot) initServiceHandler(db *DatabaseService) {
+	bs := interfaces.NewBotServiceHandler(bot, db)
+	bot.AddHandler("sheet", bs.Sheet)
 	bot.AddHandler("roll", bs.Roll)
 	bot.svchandler = bs
 }
@@ -96,6 +98,24 @@ func (bot *Bot) AddHandler(command string, handle interfaces.BotHandler) error {
 	handler.handle = handle
 	bot.handlers = append(bot.handlers, handler)
 	return nil
+}
+
+// Channel gets a channel object by ID
+func (bot *Bot) Channel(id string) (*discordgo.Channel, error) {
+	ch, err := bot.session.Channel(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not find channel by id")
+	}
+	return ch, nil
+}
+
+// User gets a user object by ID
+func (bot *Bot) User(id string) (*discordgo.User, error) {
+	u, err := bot.session.User(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not find user by id")
+	}
+	return u, nil
 }
 
 func (bot *Bot) hasHandler(command string) bool {

@@ -69,19 +69,19 @@ func Init() (*Settings, error) {
 	}
 
 	// Initialize the database
-	//database, err := initDatabase()
-	//if err != nil {
-	//	return nil, err
-	//}
+	database, err := initDatabase()
+	if err != nil {
+		return nil, err
+	}
 
 	// Initialize the Command Prefix
 	commandPrefix := initCommandPrefix()
 
 	// Initialize the Node ID
-	//nodeID, err := initNodeID()
-	//if err != nil {
-	//	return nil, err
-	//}
+	nodeID, err := initNodeID()
+	if err != nil {
+		return nil, err
+	}
 
 	// Initialize the web port
 	port, err := initPort()
@@ -91,11 +91,11 @@ func Init() (*Settings, error) {
 
 	// Create the settings object
 	set := &Settings{
-		DiscordToken: discordToken,
-		//Database:      database,
+		DiscordToken:  discordToken,
+		Database:      database,
 		CommandPrefix: commandPrefix,
-		//NodeID:        nodeID,
-		Port: port,
+		NodeID:        nodeID,
+		Port:          port,
 	}
 
 	return set, nil

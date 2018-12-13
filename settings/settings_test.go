@@ -50,7 +50,7 @@ func TestInit(t *testing.T) {
 	cfg, err := Init()
 	assert.Nil(t, err)
 	assert.Equal(t, expectedDiscordToken, cfg.DiscordToken)
-	//assert.Equal(t, expectedDatabase, cfg.Database)
+	assert.Equal(t, expectedDatabase, cfg.Database)
 
 	// tear down
 	os.Setenv("DISCORD_TOKEN", dt)
