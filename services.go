@@ -22,30 +22,46 @@ package main
 
 import (
 	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, bot, db)
-
-	// Start services
-	sm := NewServiceManager(db, bot, ws)
-	sm.Start()
+// A Service is a service managed by Slate
+type Service interface {
+	Start() error
+	Stop() error
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
+type ServicesManager struct {
+	services []Service
+}
+
+func NewServiceManager(services ...Service) *ServicesManager {
+	sm := new(ServicesManager)
+	sm.services = services
+	return sm
+}
+
+func (sm *ServicesManager) Start() {
+	for _, svc := range sm.services {
+		handleError(svc.Start(), 1)
 	}
+
+	waitForSignals()
+	sm.Stop()
+}
+
+func (sm *ServicesManager) Stop() {
+	for _, svc := range sm.services {
+		handleError(svc.Stop(), 2)
+	}
+}
+
+func waitForSignals() {
+	// Wait here until CTRL-C or other term signal is received.
+	fmt.Println("bot is now running.  Press CTRL-C to exit.")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
 }
