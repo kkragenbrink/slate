@@ -33,16 +33,19 @@ type Service interface {
 	Stop() error
 }
 
+// A ServicesManager manages the lifecycle of services for Slate
 type ServicesManager struct {
 	services []Service
 }
 
-func NewServiceManager(services ...Service) *ServicesManager {
+// NewServicesManager creates a new instance of the ServicesManager
+func NewServicesManager(services ...Service) *ServicesManager {
 	sm := new(ServicesManager)
 	sm.services = services
 	return sm
 }
 
+// Start all services, wait for a signal, then call stop.
 func (sm *ServicesManager) Start() {
 	for _, svc := range sm.services {
 		handleError(svc.Start(), 1)
@@ -52,6 +55,7 @@ func (sm *ServicesManager) Start() {
 	sm.Stop()
 }
 
+// Stop all services.
 func (sm *ServicesManager) Stop() {
 	for _, svc := range sm.services {
 		handleError(svc.Stop(), 2)

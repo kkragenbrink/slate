@@ -39,7 +39,7 @@ func main() {
 	ws := services.NewWebService(set, bot, db)
 
 	// Start services
-	sm := NewServiceManager(db, bot, ws)
+	sm := NewServicesManager(db, bot, ws)
 	sm.Start()
 }
 

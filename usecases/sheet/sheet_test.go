@@ -47,6 +47,11 @@ func (suite *SheetSuite) TestNew() {
 }
 
 func (suite *SheetSuite) TestGenerateSheetBySystem() {
-	sh := GenerateSheetBySystem("wtf2e", nil)
+	var sh domains.Sheet
+	sh = GenerateSheetBySystem("cofd2e", nil)
+	assert.Equal(suite.T(), "cofd2e", sh.System())
+	sh = GenerateSheetBySystem("cofd2e-spirit", nil)
+	assert.Equal(suite.T(), "cofd2e-spirit", sh.System())
+	sh = GenerateSheetBySystem("wtf2e", nil)
 	assert.Equal(suite.T(), "wtf2e", sh.System())
 }
