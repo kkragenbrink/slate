@@ -23,14 +23,14 @@ package sheet
 // WtF2e describes a sheet for Werewolf the Forsaken
 type WtF2e struct {
 	*BaseCofD2e
+	*CofD2eCreature
 
 	// Core
-	Chronicle string `json:"chronicle"`
-	Blood     string `json:"blood"`
-	Bone      string `json:"bone"`
-	Auspice   string `json:"auspice"`
-	Tribe     string `json:"tribe"`
-	Lodge     string `json:"lodge"`
+	Blood   string `json:"blood"`
+	Bone    string `json:"bone"`
+	Auspice string `json:"auspice"`
+	Tribe   string `json:"tribe"`
+	Lodge   string `json:"lodge"`
 
 	// Renown
 	Cunning int `json:"cunning"`
@@ -47,7 +47,7 @@ type WtF2e struct {
 	} `json:"gifts"`
 	Rites []string `json:"rites"`
 
-	// Triats
+	// Traits
 	Essence        IntWithMax `json:"essence"`
 	Harmony        int        `json:"harmony"`
 	KuruthTriggers string     `json:"kuruth_triggers"`
@@ -68,6 +68,7 @@ type WtF2eMoonGift struct {
 func NewWtF2e() *WtF2e {
 	sheet := new(WtF2e)
 	sheet.BaseCofD2e = NewBaseCofD2e()
+	sheet.CofD2eCreature = NewCofD2eCreature()
 	sheet.Gifts.Moon = []WtF2eMoonGift{
 		{List: "", Dots: 0},
 		{List: "", Dots: 0},

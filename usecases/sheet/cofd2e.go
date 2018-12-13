@@ -30,6 +30,22 @@ type BaseCofD2e struct {
 	Beats       int    `json:"beats"`
 	Notes       []Note `json:"notes"`
 
+	// Traits
+	Aspirations []string `json:"aspirations"`
+	Conditions  string   `json:"conditions"`
+	Health      struct {
+		Max        int `json:"max"`
+		Aggravated int `json:"aggravated"`
+		Lethal     int `json:"lethal"`
+		Bashing    int `json:"bashing"`
+	} `json:"health"`
+	Merits    []CofD2eMerit `json:"merits"`
+	Size      int           `json:"size"`
+	Willpower IntWithMax    `json:"willpower"`
+}
+
+// CofD2eCreature describes attributes and skills for a non-ephemeral entity
+type CofD2eCreature struct {
 	// Attributes
 	Intelligence int `json:"intelligence"`
 	Wits         int `json:"wits"`
@@ -66,19 +82,22 @@ type BaseCofD2e struct {
 	Socialize     CofD2eSkill `json:"socialize"`
 	Streetwise    CofD2eSkill `json:"streetwise"`
 	Subterfuge    CofD2eSkill `json:"subterfuge"`
+}
+
+// CofD2e describes a sheet for a Mortal
+type CofD2e struct {
+	*BaseCofD2e
+	*CofD2eCreature
+
+	// Core
+	Vice     string `json:"vice"`
+	Virtue   string `json:"virtue"`
+	Faction  string `json:"faction"`
+	Group    string `json:"group"`
+	Template string `json:"template"`
 
 	// Traits
-	Aspirations []string `json:"aspirations"`
-	Conditions  string   `json:"conditions"`
-	Health      struct {
-		Max        int `json:"max"`
-		Aggravated int `json:"aggravated"`
-		Lethal     int `json:"lethal"`
-		Bashing    int `json:"bashing"`
-	} `json:"health"`
-	Merits    []CofD2eMerit `json:"merits"`
-	Size      int           `json:"size"`
-	Willpower IntWithMax    `json:"willpower"`
+	Integrity int `json:"integrity"`
 }
 
 // CofD2eSkill describes a skill within the CofD 2e system
@@ -96,6 +115,16 @@ type CofD2eMerit struct {
 // NewBaseCofD2e creates a new instance of a base CofD2e sheet, and initializes many of its values.
 func NewBaseCofD2e() *BaseCofD2e {
 	sheet := new(BaseCofD2e)
+	sheet.Size = 5
+	sheet.Notes = make([]Note, 0)
+	sheet.Aspirations = make([]string, 0)
+	sheet.Merits = make([]CofD2eMerit, 0)
+	return sheet
+}
+
+// NewCofD2eCreature creates a new instance of a CofD2e creature sheet, and initializes many of its values.
+func NewCofD2eCreature() *CofD2eCreature {
+	sheet := new(CofD2eCreature)
 	sheet.Intelligence = 1
 	sheet.Wits = 1
 	sheet.Resolve = 1
@@ -105,9 +134,18 @@ func NewBaseCofD2e() *BaseCofD2e {
 	sheet.Presence = 1
 	sheet.Manipulation = 1
 	sheet.Composure = 1
-	sheet.Size = 5
-	sheet.Notes = make([]Note, 0)
-	sheet.Aspirations = make([]string, 0)
-	sheet.Merits = make([]CofD2eMerit, 0)
 	return sheet
+}
+
+// NewCofD2e creates a new instance of the mortal sheet and initializes its values
+func NewCofD2e() *CofD2e {
+	sheet := new(CofD2e)
+	sheet.BaseCofD2e = NewBaseCofD2e()
+	sheet.CofD2eCreature = NewCofD2eCreature()
+	return sheet
+}
+
+// System returns the system of the sheet
+func (s *CofD2e) System() string {
+	return "cofd2e"
 }

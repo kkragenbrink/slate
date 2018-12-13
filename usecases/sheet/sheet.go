@@ -51,13 +51,17 @@ func Get(ctx context.Context, db domains.CharacterRepository, id snowflake.ID) (
 // GenerateSheetBySystem generates a sheet by a specified system.  If the body is specified,
 // this function will also populate that sheet from json
 func GenerateSheetBySystem(system string, body json.RawMessage) domains.Sheet {
-	switch {
-	case system == "wtf2e":
-		sheet := NewWtF2e()
-		if body != nil {
-			json.Unmarshal(body, sheet)
-		}
-		return sheet
+	var sheet domains.Sheet
+	switch system {
+	case "cofd2e":
+		sheet = NewCofD2e()
+	case "cofd2e-spirit":
+		sheet = NewCofD2eSpirit()
+	case "wtf2e":
+		sheet = NewWtF2e()
 	}
-	return nil
+	if body != nil {
+		json.Unmarshal(body, sheet)
+	}
+	return sheet
 }
