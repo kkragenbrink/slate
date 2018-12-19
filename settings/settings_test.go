@@ -45,6 +45,14 @@ func TestInit(t *testing.T) {
 	os.Setenv("DATABASE_USER", expectedDatabase.User)
 	os.Setenv("DATABASE_PASS", expectedDatabase.Pass)
 	os.Setenv("DATABASE_NAME", expectedDatabase.Name)
+	oci := os.Getenv("OAUTH_CLIENT_ID")
+	ocs := os.Getenv("OAUTH_CLIENT_SECRET")
+	expectedOAuth := &OAuth{"test", "test"}
+	os.Setenv("OAUTH_CLIENT_ID", expectedOAuth.ClientID)
+	os.Setenv("OAUTH_CLIENT_SECRET", expectedOAuth.ClientSecret)
+	ss := os.Getenv("SESSION_SECRET")
+	expectedSessionSecret := "test"
+	os.Setenv("SESSION_SECRET", expectedSessionSecret)
 
 	// run tests
 	cfg, err := Init()
@@ -59,6 +67,9 @@ func TestInit(t *testing.T) {
 	os.Setenv("DATABASE_USER", dbuser)
 	os.Setenv("DATABASE_PASS", dbpass)
 	os.Setenv("DATABASE_NAME", dbname)
+	os.Setenv("OAUTH_CLIENT_ID", oci)
+	os.Setenv("OAUTH_CLIENT_SECRET", ocs)
+	os.Setenv("SESSION_SECRET", ss)
 }
 
 func TestCommandPrefix_Custom(t *testing.T) {

@@ -36,13 +36,15 @@ import (
 
 // The WebServiceHandler stores information useful to the web service routes
 type WebServiceHandler struct {
-	bot Bot
-	db  repositories.Database
+	auth Auth
+	bot  Bot
+	db   repositories.Database
 }
 
 // NewWebServiceHandler creates a new WebServiceHandler instance
-func NewWebServiceHandler(bot Bot, db repositories.Database) *WebServiceHandler {
+func NewWebServiceHandler(auth Auth, bot Bot, db repositories.Database) *WebServiceHandler {
 	ws := new(WebServiceHandler)
+	ws.auth = auth
 	ws.bot = bot
 	ws.db = db
 	return ws
@@ -94,29 +96,65 @@ type WebCharacter struct {
 	Sheet json.RawMessage `json:"sheet"`
 }
 
+// Characters handles the request for all characters for a user from the web.
+func (ws *WebServiceHandler) Characters(res http.ResponseWriter, req *http.Request) {
+	if !ws.auth.IsAuthorized(req) {
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
+	user, err := ws.auth.GetAuthorization(req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	repo := ws.db.Repository("character").(domains.CharacterRepository)
+	chars, err := repo.FindByPlayer(req.Context(), user.ID)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(res).Encode(chars)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // Sheet handles the sheet usecase from the web.
 func (ws *WebServiceHandler) Sheet(res http.ResponseWriter, req *http.Request) {
+	if !ws.auth.IsAuthorized(req) {
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
+	user, err := ws.auth.GetAuthorization(req)
 	rawid := chi.URLParam(req, "ID")
 	parsed, err := strconv.ParseInt(rawid, 10, 64)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
 	}
 	id := snowflake.ID(parsed)
 	repo := ws.db.Repository("character").(domains.CharacterRepository)
 	char, err := sheet.Get(req.Context(), repo, id)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	if req.Method == http.MethodPost {
+		if user.ID != char.Player {
+			http.Error(res, err.Error(), http.StatusForbidden)
+			return
+		}
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		req.Body.Close()
 		var tmp WebCharacter
 		err = json.Unmarshal(body, &tmp)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		char.Name = tmp.Name
 		sh := sheet.GenerateSheetBySystem(char.System, tmp.Sheet)
@@ -124,6 +162,7 @@ func (ws *WebServiceHandler) Sheet(res http.ResponseWriter, req *http.Request) {
 		err = repo.Store(req.Context(), char)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 	if req.Method == http.MethodGet {
@@ -139,4 +178,46 @@ func (ws *WebServiceHandler) Sheet(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// Auth describes the interface for authorization of this application
+type Auth interface {
+	BeginAuthorization(http.ResponseWriter, *http.Request)
+	CompleteAuthorization(http.ResponseWriter, *http.Request)
+	GetAuthorization(*http.Request) (*domains.User, error)
+	IsAuthorized(*http.Request) bool
+}
+
+// Auth displays the current authorization information about the user.
+func (ws *WebServiceHandler) Auth(res http.ResponseWriter, req *http.Request) {
+	if !ws.auth.IsAuthorized(req) {
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
+	user, err := ws.auth.GetAuthorization(req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+	err = json.NewEncoder(res).Encode(user)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// AuthBegin handles the usecase for attempting to log in from the web.
+func (ws *WebServiceHandler) AuthBegin(res http.ResponseWriter, req *http.Request) {
+	if ws.auth.IsAuthorized(req) {
+		http.Redirect(res, req, "/", http.StatusTemporaryRedirect)
+	}
+
+	ws.auth.BeginAuthorization(res, req)
+}
+
+// AuthComplete completes authorization and redirects the user back to the homepage.
+func (ws *WebServiceHandler) AuthComplete(res http.ResponseWriter, req *http.Request) {
+	if !ws.auth.IsAuthorized(req) {
+		ws.auth.CompleteAuthorization(res, req)
+	}
+
+	http.Redirect(res, req, "/", http.StatusTemporaryRedirect)
 }

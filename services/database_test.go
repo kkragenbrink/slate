@@ -18,35 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package services
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
 	"github.com/kkragenbrink/slate/settings"
-	"os"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"testing"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	auth := services.NewAuthService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, auth, bot, db)
-
-	// Start services
-	sm := NewServicesManager(db, bot, ws)
-	sm.Start()
+type DatabaseSuite struct {
+	suite.Suite
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
+func TestDatabaseSuite(t *testing.T) {
+	s := new(DatabaseSuite)
+	suite.Run(t, s)
+}
+
+func newMockDBSettings() *settings.Settings {
+	set := new(settings.Settings)
+	database := new(settings.Database)
+	database.User = "test"
+	database.Name = "test"
+	database.Host = "test"
+	database.Pass = "test"
+	database.Port = 1234
+	set.Database = database
+	return set
+}
+
+func (suite *DatabaseSuite) TestNewDatabaseService() {
+	db := NewDatabaseService(newMockDBSettings())
+	assert.NotNil(suite.T(), db)
 }

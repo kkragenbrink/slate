@@ -6,7 +6,7 @@ echo 'mode: count' > profile.cov
 for dir in $(find . -maxdepth 10 -not -path './vendor*' -not -path './.git*' -not -path '*/_*' -type d);
 do
 if ls $dir/*.go &> /dev/null; then
-    go test -short -covermode=count -coverprofile=$dir/profile.tmp $dir
+    go test -tags test -short -covermode=count -coverprofile=$dir/profile.tmp $dir
     if [ -f $dir/profile.tmp ]
     then
         cat $dir/profile.tmp | tail -n +2 >> profile.cov

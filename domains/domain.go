@@ -38,6 +38,7 @@ type Character struct {
 
 // The CharacterRepository describes the interface to find and store characters.
 type CharacterRepository interface {
+	FindByPlayer(ctx context.Context, id int64) ([]*Character, error)
 	FindByID(ctx context.Context, id int64) (*Character, error)
 	Store(ctx context.Context, c *Character) error
 }
@@ -45,4 +46,10 @@ type CharacterRepository interface {
 // A Sheet is a type of character sheet.
 type Sheet interface {
 	System() string
+}
+
+// A User is an authenticated discord account.
+type User struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }
