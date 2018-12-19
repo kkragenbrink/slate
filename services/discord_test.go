@@ -64,6 +64,19 @@ func (suite *BotSuite) TestAddHandler() {
 	assert.Error(suite.T(), errDuplicateHandler, err)
 }
 
+func (suite *BotSuite) TestChannel() {
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
+	bot := new(Bot)
+	expectedChannel := &discordgo.Channel{}
+	session := mocks.NewMockDiscordSession(ctrl)
+	session.EXPECT().Channel(gomock.Any()).Return(expectedChannel, nil)
+	bot.session = session
+	ch, err := bot.Channel("1")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), expectedChannel, ch)
+}
+
 func (suite *BotSuite) TestHandleMessageCreate() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
@@ -122,6 +135,19 @@ func (suite *BotSuite) TestStopError() {
 	bot.session = session
 	err := bot.Stop()
 	assert.Error(suite.T(), errSampleError, err)
+}
+
+func (suite *BotSuite) TestUser() {
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
+	bot := new(Bot)
+	expectedUser := &discordgo.User{}
+	session := mocks.NewMockDiscordSession(ctrl)
+	session.EXPECT().User(gomock.Any()).Return(expectedUser, nil)
+	bot.session = session
+	user, err := bot.User("1")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), expectedUser, user)
 }
 
 func genMockHandler(response string) interfaces.BotHandler {

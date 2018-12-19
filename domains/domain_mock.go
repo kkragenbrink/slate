@@ -33,6 +33,19 @@ func (m *MockCharacterRepository) EXPECT() *MockCharacterRepositoryMockRecorder 
 	return m.recorder
 }
 
+// FindByPlayer mocks base method
+func (m *MockCharacterRepository) FindByPlayer(ctx context.Context, id int64) ([]*Character, error) {
+	ret := m.ctrl.Call(m, "FindByPlayer", ctx, id)
+	ret0, _ := ret[0].([]*Character)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByPlayer indicates an expected call of FindByPlayer
+func (mr *MockCharacterRepositoryMockRecorder) FindByPlayer(ctx, id interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPlayer", reflect.TypeOf((*MockCharacterRepository)(nil).FindByPlayer), ctx, id)
+}
+
 // FindByID mocks base method
 func (m *MockCharacterRepository) FindByID(ctx context.Context, id int64) (*Character, error) {
 	ret := m.ctrl.Call(m, "FindByID", ctx, id)
