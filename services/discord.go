@@ -182,7 +182,7 @@ func (bot *Bot) Start() error {
 	if err != nil {
 		return errors.Wrap(err, "could not connect to discord")
 	}
-	bot.session.AddHandler(bot.handleMessageCreateInterface)
+	bot.session.AddHandler(bot.handleMessageCreate)
 
 	return nil
 }

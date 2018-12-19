@@ -18,35 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+// Copyright 2014 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package discord provides constants for using OAuth2 to access Discord.
+package discord
 
 import (
-	"fmt"
-	"github.com/kkragenbrink/slate/services"
-	"github.com/kkragenbrink/slate/settings"
-	"os"
+	"golang.org/x/oauth2"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
-
-	// Create Services
-	db := services.NewDatabaseService(set)
-	auth := services.NewAuthService(set)
-	bot, err := services.NewBot(set, db)
-	handleError(err, 1)
-	ws := services.NewWebService(set, auth, bot, db)
-
-	// Start services
-	sm := NewServicesManager(db, bot, ws)
-	sm.Start()
-}
-
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
-	}
+// Endpoint is Discord's OAuth 2.0 endpoint.
+var Endpoint = oauth2.Endpoint{
+	AuthURL:  "https://discordapp.com/api/oauth2/authorize",
+	TokenURL: "https://discordapp.com/api/oauth2/token",
 }

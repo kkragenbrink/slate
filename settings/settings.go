@@ -37,8 +37,14 @@ var ErrDatabaseInfo = errors.New("$DATABASE_HOST, $DATABASE_PORT, $DATABASE_USER
 // ErrNodeID is thrown when an invalid node ID is submitted
 var ErrNodeID = errors.New("$NODE_ID must be an integer")
 
+// ErrOAuthInfo is thrown when the environment variables for the OAuth connection aren't set
+var ErrOAuthInfo = errors.New("$OAUTH_CLIENT_ID and $OAUTH_CLIENT_SECRET are required")
+
 // ErrPort is thrown when an invalid port is submitted
 var ErrPort = errors.New("$PORT must be an integer")
+
+// ErrNoSessionSecret is thrown when the environment variable isn't set
+var ErrNoSessionSecret = errors.New("$SESSION_SECRET is required")
 
 // Database holds configuration information for the database connection
 type Database struct {
@@ -49,19 +55,31 @@ type Database struct {
 	Name string
 }
 
+// OAuth holds configuration information for the OAuth connection to Discord
+type OAuth struct {
+	ClientID     string
+	ClientSecret string
+}
+
 // Settings holds configuration information which is necessary to run slate.
 // This information is passed in at runtime via environment variables.
 type Settings struct {
-	CommandPrefix string
-	Database      *Database
-	DiscordToken  string
-	NodeID        int
-	Port          int
+	ApplicationHostname string
+	CommandPrefix       string
+	Database            *Database
+	DiscordToken        string
+	NodeID              int
+	OAuth               *OAuth
+	Port                int
+	SessionSecret       string
 }
 
 // Init returns a new settings object, and initializes that object from
 // environment variables.
 func Init() (*Settings, error) {
+	// Initialize the Command Prefix
+	commandPrefix := initCommandPrefix()
+
 	// Initialize the Discord Token
 	discordToken, err := initDiscordToken()
 	if err != nil {
@@ -74,11 +92,17 @@ func Init() (*Settings, error) {
 		return nil, err
 	}
 
-	// Initialize the Command Prefix
-	commandPrefix := initCommandPrefix()
+	// Initialize the host
+	applicationHostname := initApplicationHostname()
 
 	// Initialize the Node ID
 	nodeID, err := initNodeID()
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize the OAuth configuration
+	oauth, err := initOAuth()
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +113,22 @@ func Init() (*Settings, error) {
 		return nil, errors.Wrap(err, "unable to initialize port")
 	}
 
+	// Initialize the SessionSecret
+	sessionSecret, err := initSessionSecret()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to initialize session secret")
+	}
+
 	// Create the settings object
 	set := &Settings{
-		DiscordToken:  discordToken,
-		Database:      database,
-		CommandPrefix: commandPrefix,
-		NodeID:        nodeID,
-		Port:          port,
+		ApplicationHostname: applicationHostname,
+		CommandPrefix:       commandPrefix,
+		DiscordToken:        discordToken,
+		Database:            database,
+		NodeID:              nodeID,
+		OAuth:               oauth,
+		Port:                port,
+		SessionSecret:       sessionSecret,
 	}
 
 	return set, nil
@@ -137,6 +170,14 @@ func initDiscordToken() (string, error) {
 	return token, nil
 }
 
+func initApplicationHostname() string {
+	host := os.Getenv("APPLICATION_HOSTNAME")
+	if host == "" {
+		host = "dev.slate.sosly.org"
+	}
+	return host
+}
+
 func initNodeID() (int, error) {
 	idstr := os.Getenv("NODE_ID")
 	if idstr == "" {
@@ -147,6 +188,17 @@ func initNodeID() (int, error) {
 		return 0, ErrNodeID
 	}
 	return id, nil
+}
+
+func initOAuth() (*OAuth, error) {
+	clientID := os.Getenv("OAUTH_CLIENT_ID")
+	clientSecret := os.Getenv("OAUTH_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		return nil, ErrOAuthInfo
+	}
+
+	return &OAuth{clientID, clientSecret}, nil
 }
 
 func initPort() (int, error) {
@@ -161,4 +213,12 @@ func initPort() (int, error) {
 	}
 
 	return port, nil
+}
+
+func initSessionSecret() (string, error) {
+	token := os.Getenv("SESSION_SECRET")
+	if token == "" {
+		return "", ErrNoSessionSecret
+	}
+	return token, nil
 }

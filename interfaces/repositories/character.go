@@ -41,6 +41,29 @@ func NewCharacterRepository(db Database) *CharacterRepository {
 	return cr
 }
 
+// FindByPlayer retrieves a list of Characters from the database by the player ID.
+func (cr *CharacterRepository) FindByPlayer(ctx context.Context, id int64) ([]*domains.Character, error) {
+	query := "SELECT id, name, guild, player, system FROM characters WHERE player = $1"
+	rows, err := cr.db.Conn().QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get characters")
+	}
+	defer rows.Close()
+	chars := make([]*domains.Character, 0)
+	for rows.Next() {
+		var char domains.Character
+		var id int64
+		err := rows.Scan(&id, &char.Name, &char.Guild, &char.Player, &char.System)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not scan character")
+		}
+		sid := snowflake.ID(id)
+		char.ID = &sid
+		chars = append(chars, &char)
+	}
+	return chars, nil
+}
+
 // FindByID retrieves a Character from the database by ID.
 func (cr *CharacterRepository) FindByID(ctx context.Context, id int64) (*domains.Character, error) {
 	var c domains.Character
