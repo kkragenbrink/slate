@@ -23,13 +23,14 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/interfaces"
 	"github.com/kkragenbrink/slate/settings"
 	"github.com/pkg/errors"
-	"strings"
-	"sync"
-	"time"
 )
 
 var errDuplicateHandler = errors.New("duplicate handler already exists")
@@ -182,7 +183,7 @@ func (bot *Bot) Start() error {
 	if err != nil {
 		return errors.Wrap(err, "could not connect to discord")
 	}
-	bot.session.AddHandler(bot.handleMessageCreate)
+	bot.session.AddHandler(bot.handleMessageCreateInterface)
 
 	return nil
 }
