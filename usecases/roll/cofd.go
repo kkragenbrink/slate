@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Kevin Kragenbrink, II
+// Copyright (c) 2019 Kevin Kragenbrink, II
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,31 +25,32 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/kkragenbrink/slate/util"
 	"strconv"
 	"strings"
+
+	"github.com/kkragenbrink/slate/util"
 )
 
 // The CofDRollSystem is the d10 system used in Chronicles of Darkness
 type CofDRollSystem struct {
 	rand        roller
-	Verbose     bool `json:"verbose"`
-	Again       int  `json:"again"`
-	Exceptional int  `json:"exceptional"`
-	Rote        bool `json:"rote"`
-	Weakness    bool `json:"weakness"`
-	Dice        int  `json:"dice"`
+	Verbose     bool  `json:"verbose"`
+	Again       int64 `json:"again"`
+	Exceptional int   `json:"exceptional"`
+	Rote        bool  `json:"rote"`
+	Weakness    bool  `json:"weakness"`
+	Dice        int   `json:"dice"`
 	Results     struct {
-		Successes int   `json:"Successes"`
-		Rolls     []int `json:"Rolls"`
-		Rerolls   []int `json:"Rerolls"`
+		Successes int     `json:"Successes"`
+		Rolls     []int64 `json:"Rolls"`
+		Rerolls   []int64 `json:"Rerolls"`
 	} `json:"Results"`
 }
 
 // Flags sets up the flag rules for the system
 func (rs *CofDRollSystem) Flags(fs *flag.FlagSet) {
 	fs.BoolVar(&rs.Verbose, "verbose", false, "Whether to use a Verbose output.")
-	fs.IntVar(&rs.Again, "again", 10, "The n-Again of the rs.")
+	fs.Int64Var(&rs.Again, "again", 10, "The n-Again of the rs.")
 	fs.IntVar(&rs.Exceptional, "exceptional", 5, "The number of Successes needed for Exceptional success.")
 	fs.BoolVar(&rs.Rote, "rote", false, "Whether the role is a Rote action.")
 	fs.BoolVar(&rs.Weakness, "weakness", false, "Whether the rs is made with Weakness.")
@@ -81,7 +82,7 @@ func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
 	return nil
 }
 
-func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, rolls, rerolls []int) {
+func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, rolls, rerolls []int64) {
 	rollsToMake := util.Max(dice, 1)
 	var rerollsNeeded int
 
@@ -126,7 +127,7 @@ func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, roll
 		rerolls = append(rerolls, rerollRerolls...)
 	}
 
-	return util.Max(successes, 0), rolls, rerolls
+	return util.Max(int(successes), 0), rolls, rerolls
 }
 
 // ToString converts the Results to a string.

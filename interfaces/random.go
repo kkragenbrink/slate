@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Kevin Kragenbrink, II
+// Copyright (c) 2019 Kevin Kragenbrink, II
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,17 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package repositories
+package interfaces
 
-import (
-	"database/sql"
-
-	"github.com/bwmarrin/snowflake"
-)
-
-// Database describes what methods the database service must have.
-type Database interface {
-	ID() *snowflake.ID
-	Conn() *sql.DB
-	Repository(name string) interface{}
+// Random describes what methods the random service must have
+type Random interface {
+	Rand(times int, min, max int64) []int64
 }

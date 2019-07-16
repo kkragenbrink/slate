@@ -24,14 +24,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/kkragenbrink/slate/domains"
 	"github.com/kkragenbrink/slate/interfaces/repositories"
 	"github.com/kkragenbrink/slate/usecases/roll"
 	"github.com/kkragenbrink/slate/usecases/sheet"
 	"github.com/pkg/errors"
-	"strconv"
-	"strings"
 )
 
 // SiteURL is the URL of the website which serves static content
@@ -40,15 +41,17 @@ const SiteURL = "https://slate.sosly.org"
 
 // The BotServiceHandler stores information useful to the bot service message handlers
 type BotServiceHandler struct {
-	bot Bot
-	db  repositories.Database
+	bot  Bot
+	db   repositories.Database
+	rand Random
 }
 
 // NewBotServiceHandler creates a new BotServiceHandler instance
-func NewBotServiceHandler(bot Bot, db repositories.Database) *BotServiceHandler {
+func NewBotServiceHandler(bot Bot, db repositories.Database, rand Random) *BotServiceHandler {
 	bsh := new(BotServiceHandler)
 	bsh.bot = bot
 	bsh.db = db
+	bsh.rand = rand
 	return bsh
 }
 
@@ -97,6 +100,7 @@ func (bs *BotServiceHandler) Roll(ctx context.Context, msg *discordgo.MessageCre
 	// get a roller
 	cfs := &flag.FlagSet{}
 	rs, err := roll.NewRoller(system, nil)
+	rs.SetRand(bs.rand.Rand)
 	if err != nil {
 		// todo: log
 		return "", errors.Wrap(err, "could not get a roller")

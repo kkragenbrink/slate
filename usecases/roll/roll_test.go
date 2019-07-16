@@ -22,12 +22,14 @@ package roll
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRoller(t *testing.T) {
 	roller, err := NewRoller("cofd", nil)
+	roller.SetRand(testRoller)
 	assert.Nil(t, err)
 	assert.IsType(t, &CofDRollSystem{}, roller)
 }
@@ -43,5 +45,9 @@ func TestNewRoller_WithBody(t *testing.T) {
 	roller, err := NewRoller("cofd", body)
 	assert.Nil(t, err)
 	assert.IsType(t, &CofDRollSystem{}, roller)
-	assert.Equal(t, 10, roller.(*CofDRollSystem).Again)
+	assert.Equal(t, int64(10), roller.(*CofDRollSystem).Again)
+}
+
+func testRoller(times int, min int64, max int64) []int64 {
+	return []int64{}
 }

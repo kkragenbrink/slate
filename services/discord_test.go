@@ -22,6 +22,8 @@ package services
 
 import (
 	"context"
+	"testing"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/golang/mock/gomock"
 	"github.com/kkragenbrink/slate/interfaces"
@@ -30,7 +32,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type BotSuite struct {
@@ -47,7 +48,8 @@ func TestBotSuite(t *testing.T) {
 func (suite *BotSuite) TestNewBot() {
 	set := new(settings.Settings)
 	set.DiscordToken = "test-token"
-	_, err := NewBot(set, suite.mockdb)
+	rand := NewRandom(set)
+	_, err := NewBot(set, suite.mockdb, rand)
 	assert.Nil(suite.T(), err)
 }
 
@@ -80,7 +82,9 @@ func (suite *BotSuite) TestChannel() {
 func (suite *BotSuite) TestHandleMessageCreate() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
-	bot, _ := NewBot(&settings.Settings{CommandPrefix: "$"}, suite.mockdb)
+	set := &settings.Settings{CommandPrefix: "$"}
+	rand := NewRandom(set)
+	bot, _ := NewBot(set, suite.mockdb, rand)
 	session := mocks.NewMockDiscordSession(ctrl)
 	author := "a1"
 	channel := "c1"
