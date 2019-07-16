@@ -39,7 +39,7 @@ func main() {
 	auth := services.NewAuthService(set)
 	bot, err := services.NewBot(set, db, rand)
 	handleError(err, 1)
-	ws := services.NewWebService(set, auth, bot, db)
+	ws := services.NewWebService(set, auth, bot, db, rand)
 
 	// Start services
 	sm := NewServicesManager(db, bot, ws)

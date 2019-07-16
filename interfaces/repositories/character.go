@@ -27,6 +27,7 @@ import (
 	"github.com/kkragenbrink/slate/domains"
 	"github.com/kkragenbrink/slate/usecases/sheet"
 	"github.com/pkg/errors"
+	"strconv"
 )
 
 // The CharacterRepository stores the instructions to get and set from the database
@@ -42,9 +43,13 @@ func NewCharacterRepository(db Database) *CharacterRepository {
 }
 
 // FindByPlayer retrieves a list of Characters from the database by the player ID.
-func (cr *CharacterRepository) FindByPlayer(ctx context.Context, id int64) ([]*domains.Character, error) {
+func (cr *CharacterRepository) FindByPlayer(ctx context.Context, id string) ([]*domains.Character, error) {
 	query := "SELECT id, name, guild, player, system FROM characters WHERE player = $1"
-	rows, err := cr.db.Conn().QueryContext(ctx, query, id)
+	pid, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse id")
+	}
+	rows, err := cr.db.Conn().QueryContext(ctx, query, pid)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get characters")
 	}
@@ -65,15 +70,19 @@ func (cr *CharacterRepository) FindByPlayer(ctx context.Context, id int64) ([]*d
 }
 
 // FindByID retrieves a Character from the database by ID.
-func (cr *CharacterRepository) FindByID(ctx context.Context, id int64) (*domains.Character, error) {
+func (cr *CharacterRepository) FindByID(ctx context.Context, id string) (*domains.Character, error) {
 	var c domains.Character
 	var sid snowflake.ID
-	sid = snowflake.ID(id)
+	var idc, err = strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse id")
+	}
+	sid = snowflake.ID(idc)
 	c.ID = &sid
 	query := "SELECT name, guild, player, system, sheet FROM characters WHERE id = $1"
 	row := cr.db.Conn().QueryRowContext(ctx, query, sid.Int64())
 	var sh json.RawMessage
-	err := row.Scan(&c.Name, &c.Guild, &c.Player, &c.System, &sh)
+	err = row.Scan(&c.Name, &c.Guild, &c.Player, &c.System, &sh)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve character from the database")
 	}

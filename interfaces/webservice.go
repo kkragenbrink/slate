@@ -22,6 +22,7 @@ package interfaces
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-chi/chi"
 	"github.com/kkragenbrink/slate/domains"
@@ -39,31 +40,90 @@ type WebServiceHandler struct {
 	auth Auth
 	bot  Bot
 	db   repositories.Database
+	rand Random
 }
 
 // NewWebServiceHandler creates a new WebServiceHandler instance
-func NewWebServiceHandler(auth Auth, bot Bot, db repositories.Database) *WebServiceHandler {
+func NewWebServiceHandler(auth Auth, bot Bot, db repositories.Database, rand Random) *WebServiceHandler {
 	ws := new(WebServiceHandler)
 	ws.auth = auth
 	ws.bot = bot
 	ws.db = db
+	ws.rand = rand
 	return ws
 }
 
-// A Roll is a roll command, and is used to determine the system
-type Roll struct {
-	System string `json:"system"`
+// A ChannelQuery is a channel command, and is used to determine the guild
+type ChannelQuery struct {
+	Guild    string     `json:"guild"`
+	Channels []*Channel `json:"channels"`
 }
 
-// Roll handles the roll usecase from the web.
-func (ws *WebServiceHandler) Roll(res http.ResponseWriter, req *http.Request) {
+// A Channel channel
+type Channel struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// Channels lists the possible channels that can be rolled to.
+func (ws *WebServiceHandler) Channels(res http.ResponseWriter, req *http.Request) {
 	// decode
+	defer req.Body.Close()
 	body, err := util.Decodejson(req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	req.Body.Close()
+	var q ChannelQuery
+	err = json.Unmarshal(body, &q)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	channels, err := ws.bot.Channels(q.Guild)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, ch := range channels {
+		channel := &Channel{
+			ID:   ch.ID,
+			Name: ch.Name,
+		}
+		q.Channels = append(q.Channels, channel)
+	}
+	err = json.NewEncoder(res).Encode(q)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// A Roll is a roll command, and is used to determine the system
+type Roll struct {
+	System  string `json:"system"`
+	Channel string `json:"channel"`
+}
+
+// Roll handles the roll usecase from the web.
+func (ws *WebServiceHandler) Roll(res http.ResponseWriter, req *http.Request) {
+	if !ws.auth.IsAuthorized(req) {
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
+	user, err := ws.auth.GetAuthorization(req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// decode
+	defer req.Body.Close()
+	body, err := util.Decodejson(req.Body)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
 	// find the system
 	var r Roll
 	err = json.Unmarshal(body, &r)
@@ -77,11 +137,18 @@ func (ws *WebServiceHandler) Roll(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, roll.ErrInvalidRollSystem.Error(), http.StatusBadRequest)
 		return
 	}
+	rs.SetRand(ws.rand.Rand)
+
 	// roll
 	err = rs.Roll(req.Context(), nil)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	// send it to discord
+	err = ws.bot.SendMessage(r.Channel, fmt.Sprintf("From the web: <@%s> %s", strconv.FormatInt(user.ID, 10), rs.ToString()))
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 	// encode the results
 	err = json.NewEncoder(res).Encode(rs)
@@ -108,7 +175,7 @@ func (ws *WebServiceHandler) Characters(res http.ResponseWriter, req *http.Reque
 		return
 	}
 	repo := ws.db.Repository("character").(domains.CharacterRepository)
-	chars, err := repo.FindByPlayer(req.Context(), user.ID)
+	chars, err := repo.FindByPlayer(req.Context(), strconv.FormatInt(user.ID, 10))
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
@@ -140,16 +207,16 @@ func (ws *WebServiceHandler) Sheet(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if req.Method == http.MethodPost {
-		if user.ID != char.Player {
+		if strconv.FormatInt(user.ID, 10) != char.Player {
 			http.Error(res, err.Error(), http.StatusForbidden)
 			return
 		}
+		defer req.Body.Close()
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		req.Body.Close()
 		var tmp WebCharacter
 		err = json.Unmarshal(body, &tmp)
 		if err != nil {
@@ -166,7 +233,7 @@ func (ws *WebServiceHandler) Sheet(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 	if req.Method == http.MethodGet {
-		user, err := ws.bot.User(strconv.FormatInt(char.Player, 10))
+		user, err := ws.bot.User(char.Player)
 		if err != nil {
 			// todo: log it
 			char.PlayerName = err.Error()

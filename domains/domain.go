@@ -29,8 +29,8 @@ import (
 type Character struct {
 	ID         *snowflake.ID `json:"id"`
 	Name       string        `json:"name"`
-	Guild      int64         `json:"guild"`
-	Player     int64         `json:"player"`
+	Guild      string        `json:"guild"`
+	Player     string        `json:"player"`
 	PlayerName string        `json:"playerName"`
 	System     string        `json:"system"`
 	Sheet      Sheet         `json:"sheet"`
@@ -38,8 +38,8 @@ type Character struct {
 
 // The CharacterRepository describes the interface to find and store characters.
 type CharacterRepository interface {
-	FindByPlayer(ctx context.Context, id int64) ([]*Character, error)
-	FindByID(ctx context.Context, id int64) (*Character, error)
+	FindByPlayer(ctx context.Context, id string) ([]*Character, error)
+	FindByID(ctx context.Context, id string) (*Character, error)
 	Store(ctx context.Context, c *Character) error
 }
 
