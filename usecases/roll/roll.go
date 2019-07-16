@@ -45,7 +45,7 @@ type System interface {
 	ToString() string
 }
 
-type roller func(times int, min, max int64) []int64
+type roller func(times int, min, max int64) ([]int64, error)
 
 // NewRoller creates a new System for the appropriate system.
 func NewRoller(system string, body json.RawMessage) (System, error) {

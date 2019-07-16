@@ -56,16 +56,16 @@ func NewRandom(set *settings.Settings) *RandomService {
 }
 
 // Rand generates a slice of random numbers between min and max.
-func (r *RandomService) Rand(times int, min, max int64) []int64 {
+func (r *RandomService) Rand(times int, min, max int64) ([]int64, error) {
 	if r.mode == modeRandomOrg {
 		rolls, err := r.random.GenerateIntegers(times, min, max)
-		if err == nil {
-			return rolls
+		if err != nil {
+			return nil, err
 		}
-		// fallback to mathRand in times of crisis
+		return rolls, nil
 	}
 
-	return mathRand(times, min, max)
+	return mathRand(times, min, max), nil
 }
 
 func mathRand(times int, min, max int64) []int64 {

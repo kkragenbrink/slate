@@ -120,10 +120,10 @@ func (suite *CofDTestSuite) TestToString() {
 func mockRoller(r []int64, rr []int64) roller {
 	rolls := append(r, rr...)
 
-	return func(times int, min, max int64) []int64 {
+	return func(times int, min, max int64) ([]int64, error) {
 		re := rolls[0:times]
 		rolls = rolls[times:]
-		return re
+		return re, nil
 	}
 }
 
