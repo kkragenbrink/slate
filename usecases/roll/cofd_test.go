@@ -40,7 +40,7 @@ func (suite *CofDTestSuite) TestRoll() {
 	exs := 1
 	exr := []int64{6, 6, 6, 6, 8}
 	exrr := []int64(nil)
-	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
+	o := genMockCofDRollSystem(cofdMockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exs, o.Results.Successes)
@@ -52,7 +52,7 @@ func (suite *CofDTestSuite) TestRollAgain() {
 	exs := 2
 	exr := []int64{6, 6, 6, 6, 10}
 	exrr := []int64{9}
-	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
+	o := genMockCofDRollSystem(cofdMockRoller(exr, exrr), 10, 5, false, false)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exs, o.Results.Successes)
@@ -64,7 +64,7 @@ func (suite *CofDTestSuite) TestRollRote() {
 	exs := 4
 	exr := []int64{6, 6, 6, 8, 6}
 	exrr := []int64{8, 6, 8, 8}
-	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, true, false)
+	o := genMockCofDRollSystem(cofdMockRoller(exr, exrr), 10, 5, true, false)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exs, o.Results.Successes)
@@ -76,7 +76,7 @@ func (suite *CofDTestSuite) TestRollWeak() {
 	exs := 3
 	exr := []int64{9, 9, 9, 9, 1}
 	exrr := []int64(nil)
-	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, true)
+	o := genMockCofDRollSystem(cofdMockRoller(exr, exrr), 10, 5, false, true)
 	err := o.Roll(context.Background(), []string{"5"})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exs, o.Results.Successes)
@@ -88,7 +88,7 @@ func (suite *CofDTestSuite) TestRollChance() {
 	exs := 1
 	exr := []int64{10}
 	exrr := []int64(nil)
-	o := genMockCofDRollSystem(mockRoller(exr, exrr), 10, 5, false, false)
+	o := genMockCofDRollSystem(cofdMockRoller(exr, exrr), 10, 5, false, false)
 	var d []string
 	err := o.Roll(context.Background(), d)
 	assert.Nil(suite.T(), err)
@@ -100,13 +100,14 @@ func (suite *CofDTestSuite) TestRollChance() {
 func (suite *CofDTestSuite) TestParseArgs() {
 	str := []string{"1+1", "-1", "3-3"}
 	exp := 1
-	o, err := parseArgs(str)
+	rs := genMockCofDRollSystem(cofdMockRoller([]int64{}, []int64{}), 10, 5, false, false)
+	o, err := rs.parseArgs(str)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), exp, o)
 }
 
 func (suite *CofDTestSuite) TestToString() {
-	o := genMockCofDRollSystem(mockRoller([]int64{}, []int64{}), 9, 4, true, true)
+	o := genMockCofDRollSystem(cofdMockRoller([]int64{}, []int64{}), 9, 4, true, true)
 	o.Dice = 4
 	o.Verbose = true
 	o.Results.Successes = 4
@@ -117,7 +118,7 @@ func (suite *CofDTestSuite) TestToString() {
 	assert.Equal(suite.T(), ex, str)
 }
 
-func mockRoller(r []int64, rr []int64) roller {
+func cofdMockRoller(r []int64, rr []int64) roller {
 	rolls := append(r, rr...)
 
 	return func(times int, min, max int64) ([]int64, error) {

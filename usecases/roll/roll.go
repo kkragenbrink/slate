@@ -31,6 +31,9 @@ import (
 // ErrInvalidRollSystem is thrown when an invalid roll system is selected
 var ErrInvalidRollSystem = errors.New("roll system must be one of: cofd, d20, fate")
 
+// ErrInvalidToken is thrown when an invalid token is sent
+var ErrInvalidToken = errors.New("You have submitted an invalid token")
+
 const (
 	cofd int = iota
 	d20
@@ -49,17 +52,21 @@ type roller func(times int, min, max int64) ([]int64, error)
 
 // NewRoller creates a new System for the appropriate system.
 func NewRoller(system string, body json.RawMessage) (System, error) {
+	var sys System
 	switch system {
 	case "cofd":
-		system := &CofDRollSystem{}
-		if body != nil {
-			err := json.Unmarshal(body, &system)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not decode json")
-			}
-		}
-		return system, nil
+		sys = &CofDRollSystem{}
+	case "d20":
+		sys = NewD20RollSystem()
+	default:
+		return nil, ErrInvalidRollSystem
 	}
 
-	return nil, ErrInvalidRollSystem
+	if body != nil {
+		err := json.Unmarshal(body, &sys)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not decode json")
+		}
+	}
+	return sys, nil
 }
