@@ -34,7 +34,7 @@ func (m *MockCharacterRepository) EXPECT() *MockCharacterRepositoryMockRecorder 
 }
 
 // FindByPlayer mocks base method
-func (m *MockCharacterRepository) FindByPlayer(ctx context.Context, id int64) ([]*Character, error) {
+func (m *MockCharacterRepository) FindByPlayer(ctx context.Context, id string) ([]*Character, error) {
 	ret := m.ctrl.Call(m, "FindByPlayer", ctx, id)
 	ret0, _ := ret[0].([]*Character)
 	ret1, _ := ret[1].(error)
@@ -47,7 +47,7 @@ func (mr *MockCharacterRepositoryMockRecorder) FindByPlayer(ctx, id interface{})
 }
 
 // FindByID mocks base method
-func (m *MockCharacterRepository) FindByID(ctx context.Context, id int64) (*Character, error) {
+func (m *MockCharacterRepository) FindByID(ctx context.Context, id string) (*Character, error) {
 	ret := m.ctrl.Call(m, "FindByID", ctx, id)
 	ret0, _ := ret[0].(*Character)
 	ret1, _ := ret[1].(error)

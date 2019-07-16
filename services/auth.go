@@ -151,9 +151,9 @@ func (a *AuthService) CompleteAuthorization(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusForbidden)
 		return
 	}
-	id, _ := strconv.ParseInt(du.ID, 10, 64)
+	uid, _ := strconv.ParseInt(du.ID, 10, 64)
 	user := &domains.User{
-		ID:   id,
+		ID:   uid,
 		Name: fmt.Sprintf("%s#%s", du.Username, du.Discriminator),
 	}
 	session := a.getSession(req)

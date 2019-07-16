@@ -41,7 +41,7 @@ type DiscordSession interface {
 	Channel(string) (*discordgo.Channel, error)
 	ChannelMessageSend(string, string) (*discordgo.Message, error)
 	Close() error
-	Guild(string) (*discordgo.Guild, error)
+	GuildChannels(string) ([]*discordgo.Channel, error)
 	Open() error
 	User(string) (*discordgo.User, error)
 }
@@ -108,6 +108,28 @@ func (bot *Bot) Channel(id string) (*discordgo.Channel, error) {
 		return nil, errors.Wrap(err, "could not find channel by id")
 	}
 	return ch, nil
+}
+
+// Channels gets the list of channel objects for a guild
+func (bot *Bot) Channels(id string) ([]*discordgo.Channel, error) {
+	fmt.Println("id =", id)
+	channels := make([]*discordgo.Channel, 0)
+	ch, err := bot.session.GuildChannels(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not find guild by id")
+	}
+	for _, channel := range ch {
+		if channel.Type == discordgo.ChannelTypeGuildText {
+			channels = append(channels, channel)
+		}
+	}
+	return channels, nil
+}
+
+// SendMessage sends a message to a specified channel
+func (bot *Bot) SendMessage(id string, message string) error {
+	_, err := bot.session.ChannelMessageSend(id, message)
+	return err
 }
 
 // User gets a user object by ID

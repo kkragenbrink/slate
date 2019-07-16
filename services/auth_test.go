@@ -83,8 +83,8 @@ func (suite *AuthSuite) TestGetAuthorization() {
 	user, err := a.GetAuthorization(req)
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), user)
-	assert.Equal(suite.T(), user.ID, id)
-	assert.Equal(suite.T(), user.Name, name)
+	assert.Equal(suite.T(), id, user.ID)
+	assert.Equal(suite.T(), name, user.Name)
 }
 
 func (suite *AuthSuite) TestIsAuthorized() {
