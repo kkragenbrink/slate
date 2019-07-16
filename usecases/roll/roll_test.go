@@ -48,6 +48,6 @@ func TestNewRoller_WithBody(t *testing.T) {
 	assert.Equal(t, int64(10), roller.(*CofDRollSystem).Again)
 }
 
-func testRoller(times int, min int64, max int64) []int64 {
-	return []int64{}
+func testRoller(times int, min int64, max int64) ([]int64, error) {
+	return []int64{}, nil
 }

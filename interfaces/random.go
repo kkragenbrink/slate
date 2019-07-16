@@ -22,5 +22,5 @@ package interfaces
 
 // Random describes what methods the random service must have
 type Random interface {
-	Rand(times int, min, max int64) []int64
+	Rand(times int, min, max int64) ([]int64, error)
 }
