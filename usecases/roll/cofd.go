@@ -54,6 +54,9 @@ func (rs *CofDRollSystem) Flags(fs *flag.FlagSet) {
 	fs.IntVar(&rs.Exceptional, "exceptional", 5, "The number of Successes needed for Exceptional success.")
 	fs.BoolVar(&rs.Rote, "rote", false, "Whether the role is a Rote action.")
 	fs.BoolVar(&rs.Weakness, "weakness", false, "Whether the rs is made with Weakness.")
+
+	var system string
+	fs.StringVar(&system, "system", "cofd", "-- ignored --")
 }
 
 // SetRand assigns a random number generator to the system
@@ -67,7 +70,7 @@ func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
 	if tokens != nil {
 		var err error
 
-		rs.Dice, err = parseArgs(tokens)
+		rs.Dice, err = rs.parseArgs(tokens)
 		if err != nil {
 			// todo: wrap probably
 			return err
@@ -189,7 +192,7 @@ func (rs *CofDRollSystem) ToString() string {
 	return buff.String()
 }
 
-func parseArgs(args []string) (int, error) {
+func (rs *CofDRollSystem) parseArgs(args []string) (int, error) {
 	tokens := []int{0}
 
 	// rejoin all the args so that we can split properly
