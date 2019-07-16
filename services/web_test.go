@@ -76,6 +76,6 @@ func (suite *WebSuite) TestNewWebService() {
 	botset.DiscordToken = "test-token"
 	rand := NewRandom(botset)
 	bot, _ := NewBot(botset, db, rand)
-	w := NewWebService(newMockWebSettings(), auth, bot, db)
+	w := NewWebService(newMockWebSettings(), auth, bot, db, rand)
 	assert.NotNil(suite.T(), w)
 }

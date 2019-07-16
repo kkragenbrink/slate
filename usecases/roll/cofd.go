@@ -77,6 +77,14 @@ func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
 		}
 	}
 
+	if rs.Again == 0 {
+		rs.Again = 10
+	}
+
+	if rs.Exceptional == 0 {
+		rs.Exceptional = 5
+	}
+
 	successes, rolls, rerolls, err := rs.doRoll(rs.Dice, rs.Rote, rs.Weakness)
 	if err != nil {
 		return err

@@ -40,19 +40,20 @@ type WebService struct {
 }
 
 // NewWebService creates a new instance of the WebService manager
-func NewWebService(set *settings.Settings, auth *AuthService, bot *Bot, db *DatabaseService) *WebService {
+func NewWebService(set *settings.Settings, auth *AuthService, bot *Bot, db *DatabaseService, rand *RandomService) *WebService {
 	ws := new(WebService)
 	ws.router = initRouter()
 	ws.server = initServer(set, ws.router)
-	ws.handler = initHandler(ws.router, auth, bot, db)
+	ws.handler = initHandler(ws.router, auth, bot, db, rand)
 	return ws
 }
 
-func initHandler(router chi.Router, auth *AuthService, bot *Bot, db *DatabaseService) *interfaces.WebServiceHandler {
-	handler := interfaces.NewWebServiceHandler(auth, bot, db)
+func initHandler(router chi.Router, auth *AuthService, bot *Bot, db *DatabaseService, rand *RandomService) *interfaces.WebServiceHandler {
+	handler := interfaces.NewWebServiceHandler(auth, bot, db, rand)
 	router.Get("/auth", handler.Auth)
 	router.Get("/auth/begin", handler.AuthBegin)
 	router.Get("/auth/complete", handler.AuthComplete)
+	router.Post("/channels", handler.Channels)
 	router.Get("/characters", handler.Characters)
 	router.Post("/roll", handler.Roll)
 	router.Get("/sheets/{ID}", handler.Sheet)

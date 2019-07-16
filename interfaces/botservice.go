@@ -59,6 +59,8 @@ func NewBotServiceHandler(bot Bot, db repositories.Database, rand Random) *BotSe
 type Bot interface {
 	AddHandler(string, BotHandler) error
 	Channel(string) (*discordgo.Channel, error)
+	Channels(string) ([]*discordgo.Channel, error)
+	SendMessage(string, string) error
 	User(string) (*discordgo.User, error)
 }
 

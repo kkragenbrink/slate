@@ -26,14 +26,15 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/kkragenbrink/slate/domains"
 	"github.com/pkg/errors"
+	"strconv"
 )
 
 // New creates a new character sheet and stores it
 func New(ctx context.Context, db domains.CharacterRepository, name, system string, guild, player int64) (*domains.Character, error) {
 	character := new(domains.Character)
 	character.Name = name
-	character.Guild = guild
-	character.Player = player
+	character.Guild = strconv.FormatInt(guild, 10)
+	character.Player = strconv.FormatInt(player, 10)
 	character.System = system
 	character.Sheet = GenerateSheetBySystem(system, nil)
 	err := db.Store(ctx, character)
@@ -45,7 +46,7 @@ func New(ctx context.Context, db domains.CharacterRepository, name, system strin
 
 // Get gets a character sheet from the database by ID
 func Get(ctx context.Context, db domains.CharacterRepository, id snowflake.ID) (*domains.Character, error) {
-	return db.FindByID(ctx, id.Int64())
+	return db.FindByID(ctx, id.String())
 }
 
 // GenerateSheetBySystem generates a sheet by a specified system.  If the body is specified,
