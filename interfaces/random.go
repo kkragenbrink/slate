@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Kevin Kragenbrink, II
+// Copyright (c) 2019 Kevin Kragenbrink, II
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,36 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package roll
+package interfaces
 
-import (
-	"encoding/json"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestNewRoller(t *testing.T) {
-	roller, err := NewRoller("cofd", nil)
-	roller.SetRand(testRoller)
-	assert.Nil(t, err)
-	assert.IsType(t, &CofDRollSystem{}, roller)
-}
-
-func TestNewRoller_NoRoller(t *testing.T) {
-	_, err := NewRoller("test", nil)
-	assert.Error(t, err)
-}
-
-func TestNewRoller_WithBody(t *testing.T) {
-	raw := `{"dice": 5, "again": 10}`
-	body := (json.RawMessage)([]byte(raw))
-	roller, err := NewRoller("cofd", body)
-	assert.Nil(t, err)
-	assert.IsType(t, &CofDRollSystem{}, roller)
-	assert.Equal(t, int64(10), roller.(*CofDRollSystem).Again)
-}
-
-func testRoller(times int, min int64, max int64) ([]int64, error) {
-	return []int64{}, nil
+// Random describes what methods the random service must have
+type Random interface {
+	Rand(times int, min, max int64) ([]int64, error)
 }

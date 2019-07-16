@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Kevin Kragenbrink, II
+// Copyright (c) 2019 Kevin Kragenbrink, II
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMin(t *testing.T) {

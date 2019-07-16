@@ -41,10 +41,11 @@
 package services
 
 import (
+	"testing"
+
 	"github.com/kkragenbrink/slate/settings"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type WebSuite struct {
@@ -73,7 +74,8 @@ func (suite *WebSuite) TestNewWebService() {
 	db := NewDatabaseService(newMockDBSettings())
 	botset := new(settings.Settings)
 	botset.DiscordToken = "test-token"
-	bot, _ := NewBot(botset, db)
+	rand := NewRandom(botset)
+	bot, _ := NewBot(botset, db, rand)
 	w := NewWebService(newMockWebSettings(), auth, bot, db)
 	assert.NotNil(suite.T(), w)
 }

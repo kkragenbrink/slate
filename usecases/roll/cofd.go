@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Kevin Kragenbrink, II
+// Copyright (c) 2019 Kevin Kragenbrink, II
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,34 +25,38 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/kkragenbrink/slate/util"
 	"strconv"
 	"strings"
+
+	"github.com/kkragenbrink/slate/util"
 )
 
 // The CofDRollSystem is the d10 system used in Chronicles of Darkness
 type CofDRollSystem struct {
 	rand        roller
-	Verbose     bool `json:"verbose"`
-	Again       int  `json:"again"`
-	Exceptional int  `json:"exceptional"`
-	Rote        bool `json:"rote"`
-	Weakness    bool `json:"weakness"`
-	Dice        int  `json:"dice"`
+	Verbose     bool  `json:"verbose"`
+	Again       int64 `json:"again"`
+	Exceptional int   `json:"exceptional"`
+	Rote        bool  `json:"rote"`
+	Weakness    bool  `json:"weakness"`
+	Dice        int   `json:"dice"`
 	Results     struct {
-		Successes int   `json:"Successes"`
-		Rolls     []int `json:"Rolls"`
-		Rerolls   []int `json:"Rerolls"`
+		Successes int     `json:"Successes"`
+		Rolls     []int64 `json:"Rolls"`
+		Rerolls   []int64 `json:"Rerolls"`
 	} `json:"Results"`
 }
 
 // Flags sets up the flag rules for the system
 func (rs *CofDRollSystem) Flags(fs *flag.FlagSet) {
 	fs.BoolVar(&rs.Verbose, "verbose", false, "Whether to use a Verbose output.")
-	fs.IntVar(&rs.Again, "again", 10, "The n-Again of the rs.")
+	fs.Int64Var(&rs.Again, "again", 10, "The n-Again of the rs.")
 	fs.IntVar(&rs.Exceptional, "exceptional", 5, "The number of Successes needed for Exceptional success.")
 	fs.BoolVar(&rs.Rote, "rote", false, "Whether the role is a Rote action.")
 	fs.BoolVar(&rs.Weakness, "weakness", false, "Whether the rs is made with Weakness.")
+
+	var system string
+	fs.StringVar(&system, "system", "cofd", "-- ignored --")
 }
 
 // SetRand assigns a random number generator to the system
@@ -66,14 +70,17 @@ func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
 	if tokens != nil {
 		var err error
 
-		rs.Dice, err = parseArgs(tokens)
+		rs.Dice, err = rs.parseArgs(tokens)
 		if err != nil {
 			// todo: wrap probably
 			return err
 		}
 	}
 
-	successes, rolls, rerolls := rs.doRoll(rs.Dice, rs.Rote, rs.Weakness)
+	successes, rolls, rerolls, err := rs.doRoll(rs.Dice, rs.Rote, rs.Weakness)
+	if err != nil {
+		return err
+	}
 	rs.Results.Successes = successes
 	rs.Results.Rolls = rolls
 	rs.Results.Rerolls = rerolls
@@ -81,11 +88,14 @@ func (rs *CofDRollSystem) Roll(ctx context.Context, tokens []string) error {
 	return nil
 }
 
-func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, rolls, rerolls []int) {
+func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, rolls, rerolls []int64, err error) {
 	rollsToMake := util.Max(dice, 1)
 	var rerollsNeeded int
 
-	rolls = rs.rand(rollsToMake, 1, 10)
+	rolls, err = rs.rand(rollsToMake, 1, 10)
+	if err != nil {
+		return 0, nil, nil, err
+	}
 
 	// parse the Rolls
 	for _, roll := range rolls {
@@ -120,13 +130,16 @@ func (rs *CofDRollSystem) doRoll(dice int, rote, weak bool) (successes int, roll
 	// Anything over or equal to the "Again" threshhold needs rerolling. Easiest
 	// way to do that is just to send it back through.
 	if rerollsNeeded > 0 {
-		rerollSuccesses, rerollRolls, rerollRerolls := rs.doRoll(rerollsNeeded, false, false)
+		rerollSuccesses, rerollRolls, rerollRerolls, err := rs.doRoll(rerollsNeeded, false, false)
+		if err != nil {
+			return 0, nil, nil, err
+		}
 		successes += rerollSuccesses
 		rerolls = append(rerolls, rerollRolls...)
 		rerolls = append(rerolls, rerollRerolls...)
 	}
 
-	return util.Max(successes, 0), rolls, rerolls
+	return util.Max(int(successes), 0), rolls, rerolls, err
 }
 
 // ToString converts the Results to a string.
@@ -179,7 +192,7 @@ func (rs *CofDRollSystem) ToString() string {
 	return buff.String()
 }
 
-func parseArgs(args []string) (int, error) {
+func (rs *CofDRollSystem) parseArgs(args []string) (int, error) {
 	tokens := []int{0}
 
 	// rejoin all the args so that we can split properly

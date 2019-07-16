@@ -18,37 +18,61 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package services
 
 import (
-	"fmt"
-	"os"
+	"math/rand"
 
-	"github.com/kkragenbrink/slate/services"
 	"github.com/kkragenbrink/slate/settings"
+	"github.com/sgade/randomorg"
 )
 
-func main() {
-	// Initialize the settings
-	set, err := settings.Init()
-	handleError(err, 1)
+type mode int8
 
-	// Create Services
-	db := services.NewDatabaseService(set)
-	rand := services.NewRandom(set)
-	auth := services.NewAuthService(set)
-	bot, err := services.NewBot(set, db, rand)
-	handleError(err, 1)
-	ws := services.NewWebService(set, auth, bot, db)
+const (
+	modeMathRandom mode = 1
+	modeRandomOrg  mode = 2
+)
 
-	// Start services
-	sm := NewServicesManager(db, bot, ws)
-	sm.Start()
+// The RandomService is responsible for generating random numbers
+type RandomService struct {
+	settings *settings.Settings
+	mode     mode
+	random   *randomorg.Random
 }
 
-func handleError(err error, code int) {
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(code)
+// NewRandom instantiates and configures the random service
+func NewRandom(set *settings.Settings) *RandomService {
+	rand := new(RandomService)
+	rand.settings = set
+	rand.mode = modeMathRandom
+
+	if rand.settings.RandomOrgAPIKey != "" {
+		rand.mode = modeRandomOrg
+		rand.random = randomorg.NewRandom(rand.settings.RandomOrgAPIKey)
 	}
+
+	return rand
+}
+
+// Rand generates a slice of random numbers between min and max.
+func (r *RandomService) Rand(times int, min, max int64) ([]int64, error) {
+	if r.mode == modeRandomOrg {
+		rolls, err := r.random.GenerateIntegers(times, min, max)
+		if err != nil {
+			return nil, err
+		}
+		return rolls, nil
+	}
+
+	return mathRand(times, min, max), nil
+}
+
+func mathRand(times int, min, max int64) []int64 {
+	var results []int64
+	for i := 0; i < times; i++ {
+		roll := rand.Int63n(max) + min
+		results = append(results, roll)
+	}
+	return results
 }
