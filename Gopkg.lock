@@ -68,6 +68,14 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
   name = "github.com/gorilla/context"
   packages = ["."]
@@ -127,6 +135,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:e5d0bd87abc2781d14e274807a470acd180f0499f8bf5bb18606e9ec22ad9de9"
+  name = "github.com/pborman/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "adf5a7427709b9deb95d29d3fa8a2bf9cfd388f1"
+  version = "v1.2"
+
+[[projects]]
   digest = "1:3891cc78541df6e4596b3e73978eb062d32967084069270ec881b959be5155ae"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -140,6 +156,14 @@
   pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f7dc1ff682810a7faeda4b4c3cbc7bd531c43db7d947263fd02dd5c6486864b4"
+  name = "github.com/sgade/randomorg"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "640a49fc64e0cb060b70caa1cccdab0071604d26"
 
 [[projects]]
   digest = "1:16f1706914deecf880c7085d26d921925e4f19c4b9b0feeefe7208cb46e8610b"
@@ -215,6 +239,7 @@
     "github.com/gorilla/sessions",
     "github.com/lib/pq",
     "github.com/pkg/errors",
+    "github.com/sgade/randomorg",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/suite",
     "golang.org/x/oauth2",

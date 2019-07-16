@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+
 	"github.com/pkg/errors"
 )
 
@@ -44,7 +45,7 @@ type System interface {
 	ToString() string
 }
 
-type roller func(times, min, max int) []int
+type roller func(times int, min, max int64) []int64
 
 // NewRoller creates a new System for the appropriate system.
 func NewRoller(system string, body json.RawMessage) (System, error) {
@@ -57,7 +58,6 @@ func NewRoller(system string, body json.RawMessage) (System, error) {
 				return nil, errors.Wrap(err, "could not decode json")
 			}
 		}
-		system.SetRand(MathRand)
 		return system, nil
 	}
 

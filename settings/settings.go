@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Kevin Kragenbrink, II
+// Copyright (c) 2019 Kevin Kragenbrink, II
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -71,6 +71,7 @@ type Settings struct {
 	NodeID              int
 	OAuth               *OAuth
 	Port                int
+	RandomOrgAPIKey     string
 	SessionSecret       string
 }
 
@@ -113,6 +114,9 @@ func Init() (*Settings, error) {
 		return nil, errors.Wrap(err, "unable to initialize port")
 	}
 
+	// Initialize the random.org API key
+	randomOrgAPIKey := initRandomOrgAPIKey()
+
 	// Initialize the SessionSecret
 	sessionSecret, err := initSessionSecret()
 	if err != nil {
@@ -128,6 +132,7 @@ func Init() (*Settings, error) {
 		NodeID:              nodeID,
 		OAuth:               oauth,
 		Port:                port,
+		RandomOrgAPIKey:     randomOrgAPIKey,
 		SessionSecret:       sessionSecret,
 	}
 
@@ -213,6 +218,10 @@ func initPort() (int, error) {
 	}
 
 	return port, nil
+}
+
+func initRandomOrgAPIKey() string {
+	return os.Getenv("RANDOM_ORG_API_KEY")
 }
 
 func initSessionSecret() (string, error) {
