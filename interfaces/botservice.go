@@ -73,7 +73,7 @@ func (bs *BotServiceHandler) Sheet(ctx context.Context, msg *discordgo.MessageCr
 	fs := &flag.FlagSet{}
 	fs.Usage = func() {}
 	var system string
-	fs.StringVar(&system, "system", "wtf2e", "the character system to use")
+	fs.StringVar(&system, "system", "d20", "the character system to use")
 	fs.Parse(fields)
 	name := strings.Join(fs.Args(), " ")
 	player, _ := strconv.ParseInt(msg.Author.ID, 10, 64)
