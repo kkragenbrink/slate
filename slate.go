@@ -22,17 +22,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/kkragenbrink/slate/domain"
-	"github.com/kkragenbrink/slate/interfaces"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/kkragenbrink/slate/domain"
+	"github.com/kkragenbrink/slate/interfaces"
 )
 
 // Slate is a discord bot and web API app
 type Slate struct {
 	bot    *interfaces.Bot
 	config *domain.SlateConfig
+	random *interfaces.Random
 }
 
 // NewSlate creates a new instance of the slate app
@@ -40,7 +42,8 @@ func NewSlate(config *domain.SlateConfig) (*Slate, error) {
 	slate := &Slate{config: config}
 	var err error
 
-	slate.bot, err = interfaces.NewBot(slate.config)
+	slate.random = interfaces.NewRandom(slate.config)
+	slate.bot, err = interfaces.NewBot(slate.config, slate.random)
 	if err != nil {
 		return nil, err
 	}

@@ -21,10 +21,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/kkragenbrink/slate/domain"
 	"github.com/kkragenbrink/slate/infrastructure"
 	"github.com/sirupsen/logrus"
-	"os"
 
 	_ "github.com/heroku/x/hmetrics/onload"
 )
@@ -52,7 +53,7 @@ func main() {
 	defer slate.Stop()
 
 	// shutting down
-	logrus.Info("goodbye")
+	logrus.Info("slate shutting down")
 }
 
 func exitOnError(err error, msg string, code int) {

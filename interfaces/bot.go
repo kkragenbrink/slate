@@ -23,12 +23,13 @@ package interfaces
 import (
 	"context"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/kkragenbrink/slate/domain"
-	"github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/kkragenbrink/slate/domain"
+	"github.com/sirupsen/logrus"
 )
 
 // A DiscordSession contains instructions for communicating with Discord
@@ -48,11 +49,12 @@ type Bot struct {
 	Config   *domain.SlateConfig
 	Handlers map[string]BotMessageCreateHandler
 	Mutex    *sync.Mutex
+	Random   *Random
 	Session  *discordgo.Session
 }
 
 // NewBot instantiates a new Bot
-func NewBot(config *domain.SlateConfig) (*Bot, error) {
+func NewBot(config *domain.SlateConfig, random *Random) (*Bot, error) {
 	connStr := fmt.Sprintf("Bot %s", config.DiscordToken)
 
 	session, err := discordgo.New(connStr)
@@ -64,6 +66,7 @@ func NewBot(config *domain.SlateConfig) (*Bot, error) {
 		Config:   config,
 		Handlers: make(map[string]BotMessageCreateHandler),
 		Mutex:    &sync.Mutex{},
+		Random:   random,
 		Session:  session,
 	}
 
@@ -127,7 +130,6 @@ func (bot *Bot) HandleMessageCreate(msg *discordgo.MessageCreate) {
 		response = err.Error()
 	}
 	bot.Session.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("%s %s", msg.Author.Mention(), response))
-
 }
 
 // HasHandler checks whether the bot is able to handle the given command
@@ -138,7 +140,7 @@ func (bot *Bot) HasHandler(command string) bool {
 
 // RegisterRoutes binds the routes for the discord bot to the handler methods
 func (bot *Bot) RegisterRoutes() {
-	bot.AddHandler("hello", handleHello)
+	bot.AddHandler("roll", bot.handleRoll)
 }
 
 // Start establishes the connection to discord and begins watching for messages
@@ -156,6 +158,6 @@ func (bot *Bot) Stop() error {
 	return bot.Session.Close()
 }
 
-func handleHello(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error) {
-	return "hello!", nil
+func (bot *Bot) handleRoll(ctx context.Context, msg *discordgo.MessageCreate, fields []string) (string, error) {
+	
 }

@@ -40,7 +40,7 @@ type Roll struct {
 
 // A D20Roll is a specific Roll for using the d20 dice system
 type D20Roll struct {
-	*Roll
+	Roll
 	Tokens []D20RollToken `json:"tokens"`
 }
 
@@ -54,7 +54,7 @@ type D20RollToken struct {
 
 // A StorytellerRoll is a specific Roll for using the Storyteller dice system
 type StorytellerRoll struct {
-	*Roll
+	Roll
 	Again       int64 `json:"again"`
 	Exceptional int   `json:"exceptional"`
 	Rote        bool  `json:"rote"`
