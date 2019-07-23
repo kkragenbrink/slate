@@ -1,0 +1,11 @@
+# IDE specific files
+/.idea
+/.vscode
+/launch.json
+
+# Vendor files
+/vendor
+
+# Build files
+/slate
+/slate.exe
