@@ -22,12 +22,17 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/kkragenbrink/slate/domain"
 	"github.com/kkragenbrink/slate/infrastructure"
 	"github.com/kkragenbrink/slate/interfaces"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"os"
 
 	_ "github.com/heroku/x/hmetrics/onload"
 )
@@ -45,8 +50,19 @@ func main() {
 	cfg, err := domain.Configure()
 	exitOnError(err, "unable to initialize configuration", ExitUsage)
 
+	go measureGoroutines()
+
 	r := interfaces.SetupRoutes(cfg)
-	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+	go http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+
+	waitForSignals()
+}
+
+func measureGoroutines() {
+	for {
+		logrus.WithField("goroutines", runtime.NumGoroutine()).Info("checkpoint")
+		time.Sleep(time.Second * 10)
+	}
 }
 
 func exitOnError(err error, msg string, code int) {
@@ -54,4 +70,12 @@ func exitOnError(err error, msg string, code int) {
 		logrus.WithError(err).Error(msg)
 		os.Exit(code)
 	}
+}
+
+func waitForSignals() {
+	// Wait here until CTRL-C or other term signal is received.
+	fmt.Println("bot is now running.  Press CTRL-C to exit.")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
 }

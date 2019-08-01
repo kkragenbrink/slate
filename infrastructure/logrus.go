@@ -41,15 +41,18 @@
 package infrastructure
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 // InitLogger provides a default configuration for the logrus package
 func InitLogger() {
 	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: true,
+		DisableColors:    true,
+		ForceColors:      false,
+		FullTimestamp:    false,
+		DisableTimestamp: true,
 	})
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.DebugLevel)

@@ -63,4 +63,6 @@ func (ws WebServiceHandler) Version(res http.ResponseWriter, req *http.Request) 
 
 	vr.Response.Version = ws.Config.HerokuConfig.ReleaseVersion
 	vr.Response.ReleaseDate = ws.Config.HerokuConfig.ReleaseCreatedAt
+
+	time.Sleep(2 * time.Second)
 }
