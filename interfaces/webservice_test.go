@@ -22,45 +22,57 @@ package interfaces
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+
 	"github.com/kkragenbrink/slate/domain"
 )
 
-// The WebServiceHandler contains handlers for http requests
-type WebServiceHandler struct {
-	Config *domain.SlateConfig
-	Router *chi.Mux
+type WebServiceTestSuite struct {
+	suite.Suite
+
+	now    time.Time
+	router chi.Router
+	rec    *httptest.ResponseRecorder
 }
 
-// SetupRoutes creates a chi router for use in handling HTTP requests
-func SetupRoutes(cfg *domain.SlateConfig) chi.Router {
-	ws := &WebServiceHandler{
-		Config: cfg,
-		Router: chi.NewRouter(),
+func (s *WebServiceTestSuite) SetupTest() {
+	s.now = time.Now()
+	cfg := &domain.SlateConfig{
+		HerokuConfig: domain.HerokuConfig{
+			ReleaseVersion:   "test",
+			ReleaseCreatedAt: s.now.String(),
+		},
 	}
-
-	ws.Router.Use(middleware.Logger)
-	ws.Router.Use(middleware.Timeout(60 * time.Second))
-	ws.Router.Get("/version", ws.Version)
-
-	return ws.Router
+	s.router = SetupRoutes(cfg)
 }
 
-// Version handles requests to /version in the api
-func (ws WebServiceHandler) Version(res http.ResponseWriter, req *http.Request) {
-	vr := domain.VersionResponse{}
-	defer func() {
-		if vr.Error != nil {
-			res.WriteHeader(http.StatusInternalServerError)
-		}
-		output, _ := json.Marshal(vr)
-		res.Write(output)
-	}()
+func (s *WebServiceTestSuite) TestVersion() {
+	req, _ := http.NewRequest("GET", "/version", nil)
+	rec := httptest.NewRecorder()
+	s.router.ServeHTTP(rec, req)
+	res := rec.Result()
+	body, err := ioutil.ReadAll(res.Body)
 
-	vr.Response.Version = ws.Config.HerokuConfig.ReleaseVersion
-	vr.Response.ReleaseDate = ws.Config.HerokuConfig.ReleaseCreatedAt
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), http.StatusOK, res.StatusCode)
+
+	var vr domain.VersionResponse
+	err = json.Unmarshal(body, &vr)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), vr.Error)
+	assert.Equal(s.T(), "test", vr.Response.Version)
+	assert.Equal(s.T(), s.now.String(), vr.Response.ReleaseDate)
+}
+
+func TestWebService(t *testing.T) {
+	suite.Run(t, new(WebServiceTestSuite))
 }
