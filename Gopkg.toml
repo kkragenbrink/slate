@@ -1,6 +1,8 @@
 [metadata.heroku]
   root-package = "github.com/kkragenbrink/slate"
   ensure = true
+  go-version = "1.12.7"
+  install = "."
 
 [[constraint]]
   name = "github.com/stretchr/testify"

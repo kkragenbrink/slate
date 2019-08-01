@@ -33,7 +33,7 @@ import (
 // The WebServiceHandler contains handlers for http requests
 type WebServiceHandler struct {
 	Config *domain.SlateConfig
-	Router *chi.Mux
+	Router chi.Router
 }
 
 // SetupRoutes creates a chi router for use in handling HTTP requests

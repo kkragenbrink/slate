@@ -22,7 +22,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -31,7 +30,6 @@ import (
 
 	"github.com/kkragenbrink/slate/domain"
 	"github.com/kkragenbrink/slate/infrastructure"
-	"github.com/kkragenbrink/slate/interfaces"
 	"github.com/sirupsen/logrus"
 
 	_ "github.com/heroku/x/hmetrics/onload"
@@ -46,23 +44,22 @@ const (
 func main() {
 	infrastructure.InitLogger()
 
-	// configure slate
+	// todo: remove this
+	go measureGoroutines()
+
+	// initialize configuration
 	cfg, err := domain.Configure()
 	exitOnError(err, "unable to initialize configuration", ExitUsage)
 
-	go measureGoroutines()
+	// initialize slate
+	slate := infrastructure.NewSlate(cfg)
 
-	r := interfaces.SetupRoutes(cfg)
-	go http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+	// start services
+	slate.Start()
 
+	// wait for signals, and then stop services before exiting
 	waitForSignals()
-}
-
-func measureGoroutines() {
-	for {
-		logrus.WithField("goroutines", runtime.NumGoroutine()).Info("checkpoint")
-		time.Sleep(time.Second * 10)
-	}
+	slate.Stop()
 }
 
 func exitOnError(err error, msg string, code int) {
@@ -72,6 +69,12 @@ func exitOnError(err error, msg string, code int) {
 	}
 }
 
+func measureGoroutines() {
+	for {
+		logrus.WithField("goroutines", runtime.NumGoroutine()).Info("checkpoint")
+		time.Sleep(time.Second * 10)
+	}
+}
 func waitForSignals() {
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("bot is now running.  Press CTRL-C to exit.")

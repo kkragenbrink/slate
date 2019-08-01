@@ -20,8 +20,33 @@
 
 package infrastructure
 
-import "testing"
+import (
+	"github.com/kkragenbrink/slate/domain"
+)
 
-func TestLogrus_Init(t *testing.T) {
-	InitLogger()
+// Slate manages the state of the various application services
+type Slate struct {
+	config *domain.SlateConfig
+	http   *HTTPServer
+}
+
+// NewSlate initializes the services and returns a new Slate instance
+func NewSlate(cfg *domain.SlateConfig) *Slate {
+	http := NewHTTPServer(cfg)
+
+	slate := &Slate{
+		config: cfg,
+		http:   http,
+	}
+	return slate
+}
+
+// Start instructs the services to start
+func (s *Slate) Start() {
+	s.http.Start()
+}
+
+// Stop instructs the services to stop
+func (s *Slate) Stop() {
+	s.http.Stop()
 }
