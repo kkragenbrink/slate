@@ -30,15 +30,15 @@ import (
 	"github.com/kkragenbrink/slate/domain"
 )
 
-// The WebServiceHandler contains handlers for http requests
-type WebServiceHandler struct {
+// The WebService contains handlers for http requests
+type WebService struct {
 	Config *domain.SlateConfig
 	Router chi.Router
 }
 
 // SetupRoutes creates a chi router for use in handling HTTP requests
 func SetupRoutes(cfg *domain.SlateConfig) chi.Router {
-	ws := &WebServiceHandler{
+	ws := &WebService{
 		Config: cfg,
 		Router: chi.NewRouter(),
 	}
@@ -51,7 +51,7 @@ func SetupRoutes(cfg *domain.SlateConfig) chi.Router {
 }
 
 // Version handles requests to /version in the api
-func (ws WebServiceHandler) Version(res http.ResponseWriter, req *http.Request) {
+func (ws *WebService) Version(res http.ResponseWriter, req *http.Request) {
 	vr := domain.VersionResponse{}
 	defer func() {
 		if vr.Error != nil {

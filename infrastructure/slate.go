@@ -26,27 +26,32 @@ import (
 
 // Slate manages the state of the various application services
 type Slate struct {
-	config *domain.SlateConfig
-	http   *HTTPServer
+	config  *domain.SlateConfig
+	discord *DiscordServer
+	http    *HTTPServer
 }
 
 // NewSlate initializes the services and returns a new Slate instance
 func NewSlate(cfg *domain.SlateConfig) *Slate {
 	http := NewHTTPServer(cfg)
+	discord := NewDiscordServer(cfg)
 
 	slate := &Slate{
-		config: cfg,
-		http:   http,
+		config:  cfg,
+		discord: discord,
+		http:    http,
 	}
 	return slate
 }
 
 // Start instructs the services to start
 func (s *Slate) Start() {
+	s.discord.Start()
 	s.http.Start()
 }
 
 // Stop instructs the services to stop
 func (s *Slate) Stop() {
+	s.discord.Stop()
 	s.http.Stop()
 }

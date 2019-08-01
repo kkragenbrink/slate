@@ -21,13 +21,16 @@
 package domain
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfigure(t *testing.T) {
+	os.Setenv("DISCORD_TOKEN", "test")
 	os.Setenv("HEROKU_RELEASE_VERSION", "test")
+
 	cfg, err := Configure()
 	assert.Nil(t, err)
 	assert.NotNil(t, cfg)

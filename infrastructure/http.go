@@ -35,7 +35,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// The HTTPServer controls interactions between our WebServices router and our HTTP server
+// The HTTPServer controls interactions between our WebService router and our HTTP server
 type HTTPServer struct {
 	cfg    *domain.SlateConfig
 	router chi.Router

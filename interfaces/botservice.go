@@ -18,33 +18,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package domain
+package interfaces
 
-import "github.com/caarlos0/env"
+import (
+	"fmt"
 
-// HerokuConfig contains information from the runtime-dyno-metadata labs
-type HerokuConfig struct {
-	AppID            string `env:"HEROKU_APP_ID"`
-	AppName          string `env:"HEROKU_APP_NAME"`
-	DynoID           string `env:"HEROKU_DYNO_ID"`
-	ReleaseCreatedAt string `env:"HEROKU_RELEASE_CREATED_AT"`
-	ReleaseVersion   string `env:"HEROKU_RELEASE_VERSION,required"`
-	SlugCommit       string `env:"HEROKU_SLUG_COMMIT"`
-	SlugDescription  string `env:"HEROKU_SLUG_DESCRIPTION"`
+	"github.com/bwmarrin/discordgo"
+	"github.com/kkragenbrink/slate/domain"
+	"github.com/kkragenbrink/slate/infrastructure/bot"
+)
+
+// The BotService contains handlers for bot commands
+type BotService struct {
+	Config *domain.SlateConfig
+	Router *bot.Router
 }
 
-// SlateConfig holds configuration information necessary to run slate
-type SlateConfig struct {
-	HerokuConfig
+// SetupCommands creates a bot router for use in handling discord requests
+func SetupCommands(cfg *domain.SlateConfig) *bot.Router {
+	bs := &BotService{
+		Config: cfg,
+		Router: bot.NewRouter(),
+	}
 
-	DiscordPrefix string `env:"DISCORD_PREFIX" envDefault:"$"`
-	DiscordToken  string `env:"DISCORD_TOKEN,required"`
-	Port          int    `env:"PORT" envDefault:"3000" usage:"The port on which Slate listens for http requests"`
+	bs.Router.AddCommand("version", bs.Version)
+
+	return bs.Router
 }
 
-// Configure creates a new slate configuration object
-func Configure() (*SlateConfig, error) {
-	config := &SlateConfig{}
-	err := env.Parse(config)
-	return config, err
+// Version handles version commands from discord
+func (bs *BotService) Version(m *discordgo.Message) (response string) {
+	defer formatResponse(m, response)
+
+	response = fmt.Sprintf("version=%s releaseDate=%s",
+		bs.Config.HerokuConfig.ReleaseVersion,
+		bs.Config.HerokuConfig.ReleaseCreatedAt,
+	)
+
+	return
+}
+
+func formatResponse(m *discordgo.Message, response string) string {
+	return fmt.Sprintf("%s %s", m.Author.Mention(), response)
 }
